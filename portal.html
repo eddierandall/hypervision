@@ -360,6 +360,24 @@
     80% { opacity: 0; }
   }
 
+  /* ---------- FULL-SCREEN FLATLINE TRANSITION ---------- */
+  #flatline-screen {
+    position: fixed; inset: 0;
+    background: #000;
+    z-index: 70;
+    opacity: 0;
+    pointer-events: none;
+    display: flex; align-items: center; justify-content: center;
+    transition: opacity 0.5s ease;
+  }
+  #flatline-screen.show { opacity: 1; }
+  #transition-canvas {
+    display: block;
+    width: 100%;
+    height: 32vh;
+    max-height: 280px;
+  }
+
   /* ---------- PHASE 2: SUBSCRIBE ---------- */
   #subscribe-page {
     background:
@@ -618,11 +636,16 @@
 <div class="tear t2"></div>
 <div class="tear t3"></div>
 
+<!-- Full-screen transition: red beating EKG on black, then flatlines -->
+<div id="flatline-screen">
+  <canvas id="transition-canvas"></canvas>
+</div>
+
 <!-- ============== PHASE 2: SUBSCRIBE ============== -->
 <section id="subscribe-page" class="phase">
   <div class="subscribe-inner">
     <div class="glyph"><div class="glyph-ring"></div></div>
-    <h2 class="sub-headline">If you saw what just happened,<br>you weren't supposed to.</h2>
+    <h2 class="sub-headline">Oh my, you weren't supposed to see that!</h2>
     <p class="sub-subtitle">Add your email address to be notified when the issue is resolved.</p>
     <form class="sub-form" id="sub-form" autocomplete="off">
       <input id="sub-email" type="email" required placeholder="YOUR.EMAIL@DOMAIN" />
@@ -634,119 +657,127 @@
 
 <script>
 /* =====================================================
-   EKG CANVAS — draws a heartbeat that scrolls left,
-   then transitions through erratic into flatline.
+   EKG RENDERER (factory) — one shared renderer, two
+   instances: a small teal one in the portal header,
+   and a larger red one on the black transition screen.
 ===================================================== */
-const canvas = document.getElementById('ekg-canvas');
-const ctx = canvas.getContext('2d');
+function createEkg(canvas, opts) {
+  const ctx = canvas.getContext('2d');
+  const NORMAL  = opts.color;           // line color in normal beating mode
+  const SHOW_GRID = opts.grid !== false;
+  const LINE_W  = opts.lineWidth || 1.6;
+  const cycleLen = 140;                 // pixels per heartbeat
+  const FLATLINE_SWEEP_MS = 1500;
 
-let W = 0, H = 0, dpr = window.devicePixelRatio || 1;
-function resizeCanvas() {
-  const rect = canvas.getBoundingClientRect();
-  W = rect.width; H = rect.height;
-  canvas.width = W * dpr;
-  canvas.height = H * dpr;
-  ctx.scale(dpr, dpr);
-}
-window.addEventListener('resize', () => { dpr = window.devicePixelRatio || 1; resizeCanvas(); });
-resizeCanvas();
+  let W = 0, H = 0, dpr = window.devicePixelRatio || 1;
+  let mode = 'normal';                  // 'normal' | 'flatline'
+  let offset = 0;
+  let speed = 1.6;
+  let flatlineStart = null;
 
-let mode = 'normal';   // 'normal' | 'erratic' | 'flatline'
-let offset = 0;
-let speed = 1.6;
-const cycleLen = 140;  // pixels per heartbeat
-
-// Returns y deflection (positive = down) for a given phase 0..1 in cycle
-function ecgShape(t) {
-  if (t < 0.10) return 0;
-  if (t < 0.16) return -Math.sin((t - 0.10) / 0.06 * Math.PI) * 4;   // P
-  if (t < 0.20) return 0;
-  if (t < 0.215) return ((t - 0.20) / 0.015) * 6;                    // Q dip (down)
-  if (t < 0.235) return 6 - ((t - 0.215) / 0.020) * 36;              // R spike up
-  if (t < 0.255) return -30 + ((t - 0.235) / 0.020) * 42;            // S down to +12
-  if (t < 0.275) return 12 - ((t - 0.255) / 0.020) * 12;             // recover
-  if (t < 0.45) return 0;
-  if (t < 0.58) return -Math.sin((t - 0.45) / 0.13 * Math.PI) * 7;   // T wave
-  return 0;
-}
-
-// Tracks when flatline mode began, so the line can SWEEP from right to left
-// instead of snapping flat instantly.
-let flatlineStart = null;
-const FLATLINE_SWEEP_MS = 1500; // time for the flat zone to fill the screen
-
-function draw() {
-  ctx.clearRect(0, 0, W, H);
-  const mid = H / 2;
-
-  // Capture sweep progress and adjust speed/color the moment flatline begins
-  let elapsedFlat = 0, sweepT = 0;
-  if (mode === 'flatline') {
-    if (flatlineStart === null) flatlineStart = performance.now();
-    elapsedFlat = performance.now() - flatlineStart;
-    sweepT = Math.min(1, elapsedFlat / FLATLINE_SWEEP_MS);
-    // During the sweep, keep chaos scrolling off briskly.
-    // After the sweep, slow to a crawl — line stays alive but motionless.
-    speed = sweepT < 1 ? 2.6 : 0.5;
+  function resize() {
+    const rect = canvas.getBoundingClientRect();
+    W = rect.width; H = rect.height;
+    canvas.width  = W * dpr;
+    canvas.height = H * dpr;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(dpr, dpr);
   }
-  const flatEdge = mode === 'flatline' ? W * (1 - sweepT) : W;
+  window.addEventListener('resize', () => { dpr = window.devicePixelRatio || 1; resize(); });
+  resize();
 
-  // grid (faint)
-  ctx.strokeStyle = 'rgba(46,196,166,0.07)';
-  ctx.lineWidth = 1;
-  for (let x = 0; x < W; x += 12) {
-    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+  // Y deflection for a given phase 0..1 within one cycle (positive = down)
+  function ecgShape(t) {
+    if (t < 0.10)  return 0;
+    if (t < 0.16)  return -Math.sin((t - 0.10) / 0.06 * Math.PI) * 4;   // P
+    if (t < 0.20)  return 0;
+    if (t < 0.215) return ((t - 0.20) / 0.015) * 6;                    // Q dip
+    if (t < 0.235) return 6 - ((t - 0.215) / 0.020) * 36;              // R spike up
+    if (t < 0.255) return -30 + ((t - 0.235) / 0.020) * 42;            // S down
+    if (t < 0.275) return 12 - ((t - 0.255) / 0.020) * 12;             // recover
+    if (t < 0.45)  return 0;
+    if (t < 0.58)  return -Math.sin((t - 0.45) / 0.13 * Math.PI) * 7;  // T wave
+    return 0;
   }
 
-  // Line color — once the sweep finishes, alarm-pulse the red line
-  let stroke = '#2ec4a6';
-  if (mode === 'flatline') {
-    if (sweepT >= 1) {
-      const pulse = (Math.sin(elapsedFlat / 180) + 1) / 2; // 0..1, ~5.5 Hz alarm
-      stroke = `rgba(216,50,74,${0.65 + pulse * 0.35})`;
-    } else {
-      stroke = '#d8324a';
+  function frame() {
+    ctx.clearRect(0, 0, W, H);
+    const mid = H / 2;
+
+    // Compute sweep progress (only relevant in flatline mode)
+    let elapsedFlat = 0, sweepT = 0;
+    if (mode === 'flatline') {
+      if (flatlineStart === null) flatlineStart = performance.now();
+      elapsedFlat = performance.now() - flatlineStart;
+      sweepT = Math.min(1, elapsedFlat / FLATLINE_SWEEP_MS);
+      speed = sweepT < 1 ? 2.6 : 0.5;
     }
-  }
-  ctx.strokeStyle = stroke;
-  ctx.lineWidth = 1.6;
-  ctx.lineJoin = 'round';
-  ctx.shadowColor = mode === 'flatline' ? '#d8324a' : stroke;
-  ctx.shadowBlur = mode === 'flatline' && sweepT >= 1 ? 10 : 6;
-  ctx.beginPath();
+    const flatEdge = mode === 'flatline' ? W * (1 - sweepT) : W;
 
-  for (let x = 0; x <= W; x++) {
-    const t = ((x + offset) % cycleLen) / cycleLen;
-    let dy;
-
-    if (mode === 'flatline' && x >= flatEdge) {
-      // Right of the sweeping edge — the new flat zone (with breath of noise)
-      dy = (Math.random() - 0.5) * 0.4;
-    } else if (mode === 'flatline') {
-      // Left of edge — leftover chaos still scrolling off-screen
-      const skip = Math.floor((x + offset) / cycleLen) % 3 === 0;
-      dy = skip ? 0 : ecgShape(t);
-      dy += (Math.random() - 0.5) * 4;
-    } else if (mode === 'erratic') {
-      const skip = Math.floor((x + offset) / cycleLen) % 3 === 0;
-      dy = skip ? 0 : ecgShape(t);
-      dy += (Math.random() - 0.5) * 4;
-      if (Math.random() < 0.002) dy -= 25;
-    } else {
-      dy = ecgShape(t);
+    // Grid
+    if (SHOW_GRID) {
+      ctx.strokeStyle = 'rgba(46,196,166,0.07)';
+      ctx.lineWidth = 1;
+      for (let x = 0; x < W; x += 12) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+      }
     }
 
-    const y = mid + dy;
-    if (x === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
-  }
-  ctx.stroke();
-  ctx.shadowBlur = 0;
+    // Stroke color: normal color while beating; once flat, alarm-pulsing red
+    let stroke = NORMAL;
+    if (mode === 'flatline') {
+      if (sweepT >= 1) {
+        const pulse = (Math.sin(elapsedFlat / 180) + 1) / 2;
+        stroke = `rgba(216,50,74,${0.65 + pulse * 0.35})`;
+      } else {
+        stroke = '#d8324a';
+      }
+    }
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = LINE_W;
+    ctx.lineJoin = 'round';
+    ctx.shadowColor = mode === 'flatline' ? '#d8324a' : NORMAL;
+    ctx.shadowBlur = mode === 'flatline' && sweepT >= 1 ? 14 : 8;
+    ctx.beginPath();
 
-  offset += speed;
-  requestAnimationFrame(draw);
+    for (let x = 0; x <= W; x++) {
+      const t = ((x + offset) % cycleLen) / cycleLen;
+      let dy;
+      if (mode === 'flatline' && x >= flatEdge) {
+        dy = (Math.random() - 0.5) * 0.4;          // flat zone, breath of noise
+      } else {
+        dy = ecgShape(t);                          // normal beat
+      }
+      const y = mid + dy;
+      if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    offset += speed;
+    requestAnimationFrame(frame);
+  }
+  frame();
+
+  return {
+    setMode(m) {
+      mode = m;
+      if (m !== 'flatline') flatlineStart = null;
+    }
+  };
 }
-draw();
+
+// Small teal EKG in the portal header — never changes mode; just keeps beating.
+const ekgSmall = createEkg(
+  document.getElementById('ekg-canvas'),
+  { color: '#2ec4a6', grid: true, lineWidth: 1.6 }
+);
+
+// Big red EKG on the black transition screen — starts beating, then we flip it to 'flatline'.
+const ekgBig = createEkg(
+  document.getElementById('transition-canvas'),
+  { color: '#ff3850', grid: false, lineWidth: 2.4 }
+);
 
 /* =====================================================
    SESSION CLOCK (cosmetic)
@@ -775,31 +806,34 @@ loginBtn.addEventListener('click', () => {
 /* =====================================================
    THE GLITCH — runs on a timer
 ===================================================== */
-const GLITCH_AT = 5500;   // ms from page load until things start going wrong
-const FLATLINE_AT = 7000; // ms until full flatline (glitch now ~1.5s, was ~2.5s)
-const SWITCH_AT = 11500;  // ms until subscribe page reveals (flatline now ~4.5s)
+const GLITCH_AT     = 5500;  // ms — page starts glitching (header EKG stays normal teal)
+const TRANSITION_AT = 7000;  // ms — black screen fades in showing red beating EKG
+const FLAT_AT       = 8500;  // ms — red EKG on black transitions into flatline
+const SWITCH_AT     = 12000; // ms — cross-fade to subscribe page
 
 setTimeout(() => {
-  // erratic phase
+  // Page glitches visually (shake/RGB/tears). EKG continues beating normally.
   document.body.classList.add('glitching');
-  mode = 'erratic';
-  speed = 3.4;
 }, GLITCH_AT);
 
 setTimeout(() => {
-  // Flatline mode — draw() handles the sweep animation and speed
-  mode = 'flatline';
-}, FLATLINE_AT);
+  // Cut to black: overlay fades in over the (still-glitching) portal.
+  // The transition canvas has been beating red the whole time; now it becomes visible.
+  document.body.classList.remove('glitching');
+  document.getElementById('flatline-screen').classList.add('show');
+}, TRANSITION_AT);
 
 setTimeout(() => {
-  // hide phase 1, reveal phase 2
-  document.body.classList.remove('glitching');
+  // Red beats start flatlining: sweep across, then sustain with alarm pulse.
+  ekgBig.setMode('flatline');
+}, FLAT_AT);
+
+setTimeout(() => {
+  // Cross-fade: flatline overlay fades out, subscribe page fades in
+  document.getElementById('flatline-screen').classList.remove('show');
   document.getElementById('medical-portal').classList.remove('active');
-  // small black-out gap
   document.body.style.background = '#050608';
-  setTimeout(() => {
-    document.getElementById('subscribe-page').classList.add('active');
-  }, 350);
+  document.getElementById('subscribe-page').classList.add('active');
 }, SWITCH_AT);
 
 /* =====================================================
