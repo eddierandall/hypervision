@@ -7,6 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Space+Mono:wght@400;700&family=VT323&display=swap" rel="stylesheet" />
+<!-- Supabase JS client. Pin to a specific minor version (e.g. @2.45.0) in production. -->
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
   :root {
     --med-bg: #f4f7fa;
@@ -470,32 +472,53 @@
   }
 
   .sub-form {
-    display: flex; gap: 0;
-    border: 1px solid rgba(232,225,210,0.18);
-    background: rgba(255,255,255,0.02);
-    backdrop-filter: blur(2px);
-    border-radius: 2px;
+    display: grid;
+    gap: 10px;
+    width: 100%;
+    max-width: 440px;
+    margin: 0 auto;
+  }
+  .sub-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
   }
   .sub-form input {
-    flex: 1;
-    padding: 16px 18px;
-    background: transparent;
-    border: none;
+    width: 100%;
+    padding: 14px 16px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(232,225,210,0.18);
+    border-radius: 2px;
+    backdrop-filter: blur(2px);
     font-family: 'Space Mono', monospace;
-    font-size: 14px;
+    font-size: 13px;
     color: var(--dark-ink);
     letter-spacing: 1px;
+    transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
   }
-  .sub-form input:focus { outline: none; }
+  .sub-form input:focus {
+    outline: none;
+    border-color: rgba(216,50,74,0.55);
+    background: rgba(255,255,255,0.04);
+    box-shadow: 0 0 0 3px rgba(216,50,74,0.12);
+  }
   .sub-form input::placeholder {
-    color: rgba(232,225,210,0.3);
+    color: rgba(232,225,210,0.32);
     letter-spacing: 2px;
+    text-transform: uppercase;
+    font-size: 11px;
+  }
+  .sub-form input.invalid {
+    border-color: rgba(216,50,74,0.6);
+    box-shadow: 0 0 0 3px rgba(216,50,74,0.1);
   }
   .sub-form button {
-    padding: 0 28px;
+    margin-top: 6px;
+    padding: 14px 28px;
     background: var(--dark-accent);
     color: #fff;
     border: none;
+    border-radius: 2px;
     cursor: pointer;
     font-family: 'Space Mono', monospace;
     font-size: 11px;
@@ -504,11 +527,14 @@
     font-weight: 700;
     transition: background 0.15s;
   }
-  .sub-form button:hover { background: #b41e36; }
+  .sub-form button:hover:not(:disabled) { background: #b41e36; }
   .sub-form button:disabled {
     background: rgba(232,225,210,0.15);
     color: rgba(232,225,210,0.5);
     cursor: wait;
+  }
+  @media (max-width: 480px) {
+    .sub-form-row { grid-template-columns: 1fr; }
   }
 
   .sub-status {
@@ -647,8 +673,16 @@
     <div class="glyph"><div class="glyph-ring"></div></div>
     <h2 class="sub-headline">Oh my, you weren't supposed to see that!</h2>
     <p class="sub-subtitle">Add your email address to be notified when the issue is resolved.</p>
-    <form class="sub-form" id="sub-form" autocomplete="off">
-      <input id="sub-email" type="email" required placeholder="YOUR.EMAIL@DOMAIN" />
+    <form class="sub-form" id="sub-form" autocomplete="on" novalidate>
+      <div class="sub-form-row">
+        <input id="sub-first" type="text" required maxlength="50"
+               placeholder="FIRST NAME" autocomplete="given-name" />
+        <input id="sub-last"  type="text" required maxlength="50"
+               placeholder="LAST NAME"  autocomplete="family-name" />
+      </div>
+      <input id="sub-email" type="email" required placeholder="YOUR.EMAIL@DOMAIN" autocomplete="email" />
+      <input id="sub-birthday" type="text" required placeholder="BIRTHDAY (MM/DD)"
+             inputmode="numeric" maxlength="5" autocomplete="bday" />
       <button type="submit" id="sub-btn">Notify Me</button>
     </form>
     <div class="sub-status" id="sub-status"></div>
@@ -837,60 +871,111 @@ setTimeout(() => {
 }, SWITCH_AT);
 
 /* =====================================================
-   SUBSCRIBE FORM — saves email to persistent storage.
-   Replace the storage block below with a fetch() to your
-   own backend (Supabase / Firebase / API route) when
-   deploying outside the Claude artifact runtime.
+   SUBSCRIBE FORM — writes to Supabase
+   ─────────────────────────────────────────────────────
+   Fill in the two constants below with your project's
+   values from Supabase → Project Settings → API.
+   Both are SAFE to commit — the anon key is meant for
+   the browser. Real protection comes from the Row Level
+   Security policy in setup.sql (anon can only INSERT).
 ===================================================== */
-const subForm = document.getElementById('sub-form');
-const subEmail = document.getElementById('sub-email');
-const subBtn = document.getElementById('sub-btn');
-const subStatus = document.getElementById('sub-status');
+const SUPABASE_URL      = 'https://YOUR-PROJECT.supabase.co';
+const SUPABASE_ANON_KEY = 'YOUR-ANON-KEY';
 
-function isValidEmail(e) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+const supa = window.supabase
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;
+
+const subForm     = document.getElementById('sub-form');
+const subFirst    = document.getElementById('sub-first');
+const subLast     = document.getElementById('sub-last');
+const subEmail    = document.getElementById('sub-email');
+const subBirthday = document.getElementById('sub-birthday');
+const subBtn      = document.getElementById('sub-btn');
+const subStatus   = document.getElementById('sub-status');
+
+const EMAIL_RE    = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const BIRTHDAY_RE = /^(0[1-9]|1[0-2])\/(0[1-9]|[12][0-9]|3[01])$/;
+
+// Auto-insert the "/" as the user types digits into the birthday field
+subBirthday.addEventListener('input', () => {
+  let v = subBirthday.value.replace(/\D/g, '').slice(0, 4);
+  if (v.length > 2) v = v.slice(0, 2) + '/' + v.slice(2);
+  subBirthday.value = v;
+});
+
+// Clear invalid styling as soon as the user edits a field
+[subFirst, subLast, subEmail, subBirthday].forEach((el) => {
+  el.addEventListener('input', () => el.classList.remove('invalid'));
+});
+
+function showError(msg, fields = []) {
+  subStatus.textContent = msg;
+  subStatus.classList.remove('success', 'working');
+  subStatus.classList.add('error');
+  fields.forEach((el) => el.classList.add('invalid'));
 }
 
 subForm.addEventListener('submit', async (ev) => {
   ev.preventDefault();
-  const email = subEmail.value.trim().toLowerCase();
-  subStatus.classList.remove('success', 'error');
+  subStatus.classList.remove('success', 'error', 'working');
 
-  if (!isValidEmail(email)) {
-    subStatus.textContent = 'Please enter a valid email address.';
-    subStatus.classList.add('error');
-    return;
+  const firstName = subFirst.value.trim();
+  const lastName  = subLast.value.trim();
+  const email     = subEmail.value.trim().toLowerCase();
+  const birthday  = subBirthday.value.trim();
+
+  // Client-side validation — friendly errors before hitting the network
+  if (!firstName) return showError('Please enter your first name.', [subFirst]);
+  if (!lastName)  return showError('Please enter your last name.',  [subLast]);
+  if (!EMAIL_RE.test(email))       return showError('Please enter a valid email address.', [subEmail]);
+  if (!BIRTHDAY_RE.test(birthday)) return showError('Birthday must be in MM/DD format.',   [subBirthday]);
+
+  if (!supa) {
+    return showError('Supabase client not loaded — check the CDN <script> tag.');
+  }
+  if (SUPABASE_URL.startsWith('https://YOUR-PROJECT')) {
+    return showError('Supabase is not configured yet (see SUPABASE_URL/ANON_KEY in source).');
   }
 
   subBtn.disabled = true;
+  subStatus.className = 'sub-status working';
   subStatus.textContent = 'Submitting…';
-  subStatus.classList.remove('error');
 
   try {
-    // ----- ARTIFACT STORAGE (swap for your backend in production) -----
-    const key = `subscribers:${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
-    const payload = JSON.stringify({
-      email,
-      submitted_at: new Date().toISOString(),
-      user_agent: navigator.userAgent
-    });
-    if (window.storage && typeof window.storage.set === 'function') {
-      await window.storage.set(key, payload, true); // shared:true so creator can read all
-    } else {
-      // fallback for plain hosting — replace with your own POST
-      console.log('Would POST to backend:', payload);
-    }
-    // -----------------------------------------------------------------
+    const { error } = await supa
+      .from('subscribers')
+      .insert({
+        first_name: firstName,
+        last_name:  lastName,
+        email,
+        birthday
+        // `unsubscribed` defaults to 'N' in the schema
+        // `created_at` defaults to NOW()
+      });
 
-    subStatus.textContent = 'Thanks. We\'ll be in touch when the issue is resolved.';
-    subStatus.classList.add('success');
-    subEmail.value = '';
-    subEmail.disabled = true;
+    if (error) {
+      // Postgres unique-violation = email already in the list
+      if (error.code === '23505') {
+        subStatus.className = 'sub-status success';
+        subStatus.textContent = 'You\'re already on the list. We\'ll be in touch.';
+      } else {
+        console.error('Supabase insert error:', error);
+        showError('Something went wrong. Please try again.');
+        subBtn.disabled = false;
+        return;
+      }
+    } else {
+      subStatus.className = 'sub-status success';
+      subStatus.textContent = 'Thanks. We\'ll be in touch when the issue is resolved.';
+    }
+
+    // Lock the form after a successful submission (or a known-duplicate)
+    [subFirst, subLast, subEmail, subBirthday].forEach((el) => { el.disabled = true; });
     subBtn.textContent = 'Sent';
   } catch (err) {
     console.error(err);
-    subStatus.textContent = 'Something went wrong. Please try again.';
-    subStatus.classList.add('error');
+    showError('Network error. Please check your connection and try again.');
     subBtn.disabled = false;
   }
 });

@@ -14,6 +14,7 @@ The entire inner page is encrypted at rest. Only the password unlocks it.
 .
 ├── portal.html         # Source: the unencrypted Hyper Vision page (DO NOT publish)
 ├── encrypt.py          # Build script: portal.html → docs/index.html + docs/gate.css
+├── setup.sql           # Supabase schema setup (run once against your project)
 ├── requirements.txt    # Python dependency for the build script
 ├── .gitignore
 ├── README.md           # this file
@@ -94,31 +95,77 @@ gate matters.
 
 ---
 
-## ⚠️ Email storage in production
+## Email storage — Supabase
 
-The subscribe form currently saves emails via `window.storage`, which only
-exists inside Anthropic's artifact runtime. **Once deployed to GitHub Pages /
-Netlify / etc., that API does not exist** — emails will silently not be saved.
+Submissions write to a `subscribers` table in your Supabase project. Fields
+captured per submitter:
 
-In `portal.html`, find the block marked:
+| column | type | notes |
+| --- | --- | --- |
+| `email` | `TEXT` | primary key, stored lowercased |
+| `first_name` | `TEXT` | required |
+| `last_name` | `TEXT` | required |
+| `birthday` | `TEXT` | required, MM/DD format, CHECK-constrained |
+| `unsubscribed` | `CHAR(1)` | `'Y'` or `'N'`, defaults to `'N'` |
+| `created_at` | `TIMESTAMPTZ` | defaults to `NOW()` |
 
-```js
-// ----- ARTIFACT STORAGE (swap for your backend in production) -----
-```
+### One-time setup
 
-Replace it with one of:
+1. **Create a Supabase project** at [supabase.com](https://supabase.com).
+2. **Run `setup.sql`** — in the Supabase dashboard, go to SQL Editor, paste
+   the contents of `setup.sql` from this repo, and click Run. This creates
+   the table, normalizes emails to lowercase via a trigger, enables Row Level
+   Security, and adds an INSERT-only policy for anonymous visitors. The script
+   is idempotent — safe to re-run.
+3. **Wire the frontend** to your project. In `portal.html`, find the two
+   constants near the bottom of the script section:
+   ```js
+   const SUPABASE_URL      = 'https://YOUR-PROJECT.supabase.co';
+   const SUPABASE_ANON_KEY = 'YOUR-ANON-KEY';
+   ```
+   Replace both with values from Supabase → Project Settings → API. The anon
+   key is safe to commit — it's intended for the browser, and the RLS policy
+   from `setup.sql` is what protects the data.
+4. **Re-encrypt and deploy** the updated portal:
+   ```bash
+   python3 encrypt.py
+   git add portal.html docs/index.html
+   git commit -m "Wire Supabase"
+   git push
+   ```
 
-- **Formspree** — `<form action="https://formspree.io/f/YOUR-ID" method="POST">`,
-  no backend required. Free tier covers 50 submissions/month.
-- **Buttondown / ConvertKit / Mailchimp** — use their HTML form embed; emails
-  go straight into a real mailing list you can send from.
-- **Your own backend** — a simple `fetch('https://api.yoursite.com/subscribe',
-  { method: 'POST', body: JSON.stringify({ email }) })` call.
-- **Supabase / Firebase** — if you want a real database without writing a
-  server.
+### What anonymous visitors can and can't do
 
-After editing `portal.html`, re-run `python3 encrypt.py` to regenerate the
-encrypted output.
+The RLS policy in `setup.sql` allows the `anon` role (used by the browser)
+to **insert** rows but does **not** grant `SELECT`, `UPDATE`, or `DELETE`.
+That means:
+
+- ✅ Visitors can subscribe.
+- ❌ Visitors **cannot** read other people's emails by guessing API calls.
+- ❌ Visitors cannot mark anyone as unsubscribed (you'll handle that yourself
+  when an unsubscribe link is added later).
+
+### Reading / exporting the list
+
+Two easy paths:
+
+- **Dashboard**: Supabase → Table Editor → `subscribers` → filter / sort / export to CSV.
+- **SQL Editor**: e.g.
+  ```sql
+  SELECT first_name, last_name, email, birthday, created_at
+  FROM subscribers
+  WHERE unsubscribed = 'N'
+  ORDER BY created_at DESC;
+  ```
+
+The dashboard uses the `service_role` key, which bypasses RLS, so you see everything.
+
+### Duplicate handling
+
+A repeat submission with an existing email gets a friendly *"You're already on
+the list"* message rather than an error. Postgres returns error code `23505`
+on the unique-violation, which the form treats as a successful (idempotent)
+subscribe.
 
 ---
 
