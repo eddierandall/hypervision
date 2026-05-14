@@ -476,14 +476,32 @@ body{min-height:100vh;font-family:'Rajdhani',sans-serif;overflow:hidden;backgrou
     }, 1050);
   }
 
+  /* ── Cookie helpers ── */
+  function setCookie(name, val, hours) {
+    const exp = new Date(Date.now() + hours * 36e5).toUTCString();
+    document.cookie = `${name}=${val};expires=${exp};path=/;SameSite=Strict`;
+  }
+  function getCookie(name) {
+    return document.cookie.split(';').map(c => c.trim())
+      .find(c => c.startsWith(name + '='))?.split('=')[1] || null;
+  }
+
+  /* ── Skip gate if valid cookie exists ── */
+  function enterPortal() {
+    pPW.classList.add('hidden');
+    pLight.classList.remove('hidden');
+    setTimeout(() => glitchTransition(pLight, pDark), 4000);
+  }
+
+  if (getCookie('hv_auth') === 'granted') {
+    enterPortal();
+  }
+
   /* ── Password check ── */
   function checkPassword() {
-    const val = pwInp.value;
-    if (val === 'G0B!lls') {
-      pPW.classList.add('hidden');
-      pLight.classList.remove('hidden');
-      /* Start 4 s auto-glitch from light → dark */
-      setTimeout(() => glitchTransition(pLight, pDark), 4000);
+    if (pwInp.value === 'G0B!lls') {
+      setCookie('hv_auth', 'granted', 24);
+      enterPortal();
     } else {
       pwInp.classList.add('err');
       pwErr.textContent = 'Access denied.';
