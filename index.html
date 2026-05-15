@@ -16,6 +16,8 @@
   }
 })();
 </script>
+<!-- Earliest possible dark paint — Safari URL bar samples background-color of body -->
+<style>html,body{background-color:#07090f!important}</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;600;700&family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
@@ -174,7 +176,7 @@ body{
 /* ══════════════════════════════════════════════════
    PAGE 1  —  DARK FORM
 ══════════════════════════════════════════════════ */
-#page-dark{background:var(--dk-bg);color:var(--dk-txt);overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;align-items:center;justify-content:flex-start;padding-top:clamp(24px,5vh,48px)}
+#page-dark{background:var(--dk-bg);color:var(--dk-txt)}
 #page-dark::before{
   content:'';position:absolute;inset:0;pointer-events:none;
   background:
