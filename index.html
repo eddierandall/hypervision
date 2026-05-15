@@ -294,18 +294,23 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
   }
 
   /* Glitch: light → dark */
+  const themeMeta = document.querySelector('meta[name="theme-color"]');
+
   function glitchToPortal(){
     pDark.classList.remove('hidden');
     pLight.classList.add('glitch-out');
     setTimeout(()=>{
       pLight.classList.add('hidden');
       pLight.classList.remove('glitch-out');
+      themeMeta.content = '#07090f';
+      document.getElementById('fname').focus();
     },1050);
   }
 
   /* Enter portal: show light page 4s then glitch */
   function enterPortal(){
     pPW.classList.add('hidden');
+    themeMeta.content = '#88d5f7';
     pLight.classList.remove('hidden');
     setTimeout(glitchToPortal, 4000);
   }
