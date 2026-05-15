@@ -307,22 +307,27 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
     },1050);
   }
 
-  /* Enter portal: show light page 4s then glitch */
-  function enterPortal(){
+  function enterPortal(firstTime){
     pPW.classList.add('hidden');
-    themeMeta.content = '#88d5f7';
-    pLight.classList.remove('hidden');
-    setTimeout(glitchToPortal, 4000);
+    if(firstTime){
+      /* First login: show light page then glitch */
+      themeMeta.content = '#88d5f7';
+      pLight.classList.remove('hidden');
+      setTimeout(glitchToPortal, 4000);
+    } else {
+      /* Returning user: skip light page, go straight to dark */
+      document.getElementById('fname').focus();
+    }
   }
 
-  /* Auto-enter if cookie valid */
-  if(getCookie('hv_auth')==='granted') enterPortal();
+  /* Auto-enter if cookie valid — skip light page */
+  if(getCookie('hv_auth')==='granted') enterPortal(false);
 
   /* Password check */
   function checkPassword(){
     if(pwInp.value==='G0B!lls'){
       setCookie('hv_auth','granted',24);
-      enterPortal();
+      enterPortal(true);
     } else {
       pwInp.classList.add('err');
       pwErr.textContent='Access denied.';
