@@ -162,7 +162,7 @@ body{
 /* ══════════════════════════════════════════════════
    PAGE 1  —  DARK FORM
 ══════════════════════════════════════════════════ */
-#page-dark{background:var(--dk-bg);color:var(--dk-txt)}
+#page-dark{background:var(--dk-bg);color:var(--dk-txt);overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;align-items:center;justify-content:flex-start;padding-top:clamp(24px,5vh,48px)}
 #page-dark::before{
   content:'';position:absolute;inset:0;pointer-events:none;
   background:
@@ -201,12 +201,7 @@ body{
   display:flex;flex-direction:column;align-items:center;
   animation:fadeUp .7s ease both;
   width:100%;
-  max-height:calc(100dvh - 64px);
-  overflow-y:auto;
-  overflow-x:hidden;
-  -webkit-overflow-scrolling:touch;
-  overscroll-behavior:contain;
-  padding-bottom:16px;
+  padding:0 0 16px;
 }
 @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 
@@ -365,6 +360,8 @@ body{
 </style>
 </head>
 <body>
+<!-- Permanent dark backdrop — covers any iOS Safari gap behind fixed elements -->
+<div style="position:fixed;inset:0;bottom:-100px;background:#07090f;z-index:-1;" aria-hidden="true"></div>
 
 <!-- ── PAGE -1  PASSWORD GATE ───────────────────── -->
 <div class="page" id="page-pw">
