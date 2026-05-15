@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#88d5f7" id="theme-meta">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>Hyper Vision Patient Portal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;600;700&family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -500,6 +503,10 @@ body{
     }, 1050);
   }
 
+  /* ── Theme-color helper (Safari browser chrome) ── */
+  const themeMeta = document.getElementById('theme-meta');
+  function setTheme(color) { themeMeta.content = color; }
+
   /* ── Cookie helpers ── */
   function setCookie(name, val, hours) {
     const exp = new Date(Date.now() + hours * 36e5).toUTCString();
@@ -512,9 +519,13 @@ body{
 
   /* ── Skip gate if valid cookie exists ── */
   function enterPortal() {
+    setTheme('#88d5f7');   /* light page — sky blue */
     pPW.classList.add('hidden');
     pLight.classList.remove('hidden');
-    setTimeout(() => glitchTransition(pLight, pDark), 4000);
+    setTimeout(() => {
+      glitchTransition(pLight, pDark);
+      setTheme('#07090f'); /* dark page */
+    }, 4000);
   }
 
   if (getCookie('hv_auth') === 'granted') {
@@ -561,6 +572,7 @@ body{
   btn.addEventListener('click', () => {
     if (!validate()) return;
     btn.disabled = true;
+    setTheme('#07090f');
 
     /* Show thank-you behind, then fade dark page out */
     pTY.classList.remove('hidden');
