@@ -8,6 +8,14 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Hyper Vision Patient Portal</title>
+<!-- Inline pre-paint: check cookie before first render so Safari URL bar sees dark immediately -->
+<script>
+(function(){
+  if(document.cookie.indexOf('hv_auth=granted')>-1){
+    document.documentElement.setAttribute('data-auth','1');
+  }
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;600;700&family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
@@ -22,7 +30,11 @@
   --dk-glow-sm:   0 0 8px rgba(120,190,255,0.4);
 }
 
-/* ══ RESET ══════════════════════════════════════════ */
+/* Pre-paint auth: authenticated users start on dark page — no light-blue first paint */
+[data-auth='1'] #page-pw,
+[data-auth='1'] #page-light { display:none !important; }
+[data-auth='1'] #page-dark  { display:flex !important; }
+
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{
   height:100%;
@@ -499,6 +511,8 @@ body{
     setTimeout(() => {
       fromEl.classList.add('hidden');
       fromEl.classList.remove('glitch-out');
+      /* Nudge scroll so Safari repaints URL bar with new background colour */
+      requestAnimationFrame(() => { window.scrollBy(0,1); window.scrollBy(0,-1); });
     }, 1050);
   }
 
@@ -514,9 +528,21 @@ body{
 
   /* ── Skip gate if valid cookie exists ── */
   function enterPortal() {
+    const alreadyAuthed = document.documentElement.getAttribute('data-auth') === '1';
     pPW.classList.add('hidden');
-    pLight.classList.remove('hidden');
-    setTimeout(() => glitchTransition(pLight, pDark), 4000);
+    if (alreadyAuthed) {
+      /* Dark page already visible from CSS — just ensure state is clean */
+      pLight.classList.add('hidden');
+      pDark.classList.remove('hidden');
+      /* Nudge scroll so Safari repaints URL bar with dark background */
+      requestAnimationFrame(() => {
+        window.scrollBy(0,1);
+        window.scrollBy(0,-1);
+      });
+    } else {
+      pLight.classList.remove('hidden');
+      setTimeout(() => glitchTransition(pLight, pDark), 4000);
+    }
   }
 
   if (getCookie('hv_auth') === 'granted') {
