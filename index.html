@@ -20,16 +20,29 @@
 
 /* ══ RESET ══════════════════════════════════════════ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%}
-html,body{height:100%;background:var(--dk-bg)}
-body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overflow:hidden;background:var(--dk-bg)}
+html,body{
+  height:100%;
+  background:var(--dk-bg);
+  overscroll-behavior:none;
+}
+body{
+  min-height:100vh;
+  min-height:100dvh;
+  font-family:'Rajdhani',sans-serif;
+  overflow:hidden;
+  background:var(--dk-bg);
+  -webkit-tap-highlight-color:transparent;
+}
 
 /* ══ PAGE SHELL ═════════════════════════════════════ */
 .page{
   position:fixed;inset:0;
   display:flex;flex-direction:column;
   align-items:center;justify-content:center;
-  padding:32px 20px;overflow:hidden auto;
+  padding:32px 20px;
+  overflow:hidden;          /* never scroll the page itself */
+  /* safe-area padding for notch devices */
+  padding-bottom:max(32px, env(safe-area-inset-bottom));
 }
 .page.hidden{display:none}
 #page-pw       {z-index:5}
@@ -178,7 +191,18 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
 .dk-cr:nth-child(4){width:30px;height:55px;margin-left:2px}
 
 /* Dark content */
-.dk-content{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;animation:fadeUp .7s ease both}
+.dk-content{
+  position:relative;z-index:2;
+  display:flex;flex-direction:column;align-items:center;
+  animation:fadeUp .7s ease both;
+  width:100%;
+  max-height:calc(100dvh - 64px);
+  overflow-y:auto;
+  overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
+  padding-bottom:16px;
+}
 @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 
 .dk-title{font-size:clamp(1.05rem,3vw,1.55rem);font-weight:600;letter-spacing:.02em;text-align:center;margin-bottom:5px;color:var(--dk-txt);text-shadow:var(--dk-glow-sm)}
@@ -338,8 +362,6 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
   width:min(88vw,600px);
   height:auto;
   margin:0 auto clamp(14px,2.5vw,24px);
-  filter:drop-shadow(0 0 14px rgba(140,200,255,.45));
-  animation:dkGlow 3s ease-in-out infinite alternate;
 }
 </style>
 </head>
