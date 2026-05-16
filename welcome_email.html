@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WELCOME TO HYPER VISION</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;600;700&family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --dk-bg:      #07090f;
+  --dk-border:  rgba(180,210,255,0.22);
+  --dk-txt:     #ddeeff;
+  --dk-txt-dim: rgba(200,225,255,0.55);
+}
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html,body {
+  width:100%; min-height:100%;
+  background:var(--dk-bg);
+  font-family:'Rajdhani',sans-serif;
+  color:var(--dk-txt);
+  -webkit-font-smoothing:antialiased;
+}
+
+/* Background matching the dark portal page layer from index.html */
+.email-bg {
+  background: var(--dk-bg);
+  width: 100%;
+  padding: 40px 0 60px;
+  position: relative;
+  overflow: hidden;
+}
+.email-bg::before {
+  content: '';
+  position: fixed; inset: 0;
+  pointer-events: none;
+  opacity: 0.10;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Crect x='60' y='40' width='40' height='80' rx='8' fill='none' stroke='%238ec8f8' stroke-width='1'/%3E%3Crect x='40' y='60' width='80' height='40' rx='8' fill='none' stroke='%238ec8f8' stroke-width='1'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
+.email-bg::after {
+  content: '';
+  position: fixed; inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 60% 50% at 72% 28%, rgba(15,50,100,.38) 0%, transparent 65%),
+    radial-gradient(ellipse 40% 50% at 18% 72%, rgba(8,35,70,.28) 0%, transparent 65%),
+    linear-gradient(180deg, #07090f 0%, #0a0f1e 50%, #07090f 100%);
+}
+
+.email-container {
+  position:relative; z-index:1;
+  max-width:600px;
+  margin:0 auto;
+  padding:0 20px;
+}
+
+/* Header style aligned with the dark page logo */
+.email-header { text-align:center; padding-bottom:34px; }
+.eye-logo {
+  display: block;
+  width: clamp(120px, 18vw, 200px);
+  height: auto;
+  margin: 0 auto 18px;
+  animation: ltBob 3s ease-in-out infinite;
+}
+
+@keyframes ltBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+
+/* Rule line separators */
+.rule {
+  width:100%; height:1px;
+  background:linear-gradient(90deg,
+    transparent 0%,
+    rgba(180,210,255,.15) 15%,
+    rgba(180,210,255,.45) 50%,
+    rgba(180,210,255,.15) 85%,
+    transparent 100%);
+  margin:0 0 34px;
+  position:relative;
+}
+.rule::after {
+  content:'';
+  position:absolute; left:50%; top:50%;
+  transform:translate(-50%,-50%);
+  width:6px; height:6px;
+  border-radius:50%;
+  background:rgba(140,200,255,.7);
+}
+
+/* Headings and labels */
+.subject-label {
+  font-family:'Share Tech Mono',monospace;
+  font-size:clamp(.68rem,1.6vw,.78rem);
+  letter-spacing:.14em;
+  color:var(--dk-txt-dim);
+  text-transform:uppercase;
+  margin-bottom:10px;
+  display:flex; align-items:center; gap:10px;
+}
+.subject-label::before,
+.subject-label::after {
+  content:''; flex:1; height:1px; background:var(--dk-border);
+}
+.headline {
+  font-family:'Orbitron',sans-serif;
+  font-size:clamp(1.4rem,4.5vw,2.1rem);
+  font-weight:900;
+  letter-spacing:.06em;
+  text-align:center;
+  color:var(--dk-txt);
+  line-height:1.2;
+  margin-bottom:6px;
+}
+.headline-sub {
+  font-family:'Share Tech Mono',monospace;
+  font-size:clamp(.7rem,1.8vw,.85rem);
+  letter-spacing:.1em;
+  color:var(--dk-txt-dim);
+  text-align:center;
+  text-transform:uppercase;
+  margin-bottom:32px;
+}
+
+/* Content cards */
+.card {
+  background:rgba(255,255,255,.028);
+  border:1px solid var(--dk-border);
+  border-radius:20px;
+  padding:clamp(24px,5vw,40px) clamp(20px,5vw,36px);
+  backdrop-filter:blur(14px);
+  box-shadow:0 0 60px rgba(0,0,0,.65), inset 0 1px 0 rgba(255,255,255,.06);
+  margin-bottom:24px;
+}
+.recipient-name {
+  font-family:'Orbitron',sans-serif;
+  font-size:clamp(.9rem,2.4vw,1.1rem);
+  font-weight:700;
+  letter-spacing:.06em;
+  color:rgba(160,215,255,.85);
+  margin-bottom:16px;
+  padding-bottom:14px;
+  border-bottom:1px solid var(--dk-border);
+}
+.enrolled-confirm {
+  font-family:'Share Tech Mono',monospace;
+  font-size:clamp(.78rem,1.8vw,.88rem);
+  letter-spacing:.06em;
+  color:rgba(140,210,255,.8);
+  line-height:1.6;
+  background:rgba(80,160,255,.06);
+  border:1px solid rgba(100,180,255,.18);
+  border-radius:10px;
+  padding:14px 18px;
+  margin-bottom:24px;
+  text-transform:uppercase;
+}
+.section-divider {
+  display:flex; align-items:center; gap:12px;
+  margin:28px 0 22px;
+}
+.section-divider .line { flex:1; height:1px; background:var(--dk-border); }
+.section-label {
+  font-family:'Orbitron',sans-serif;
+  font-size:clamp(.68rem,1.6vw,.78rem);
+  font-weight:700;
+  letter-spacing:.12em;
+  color:var(--dk-txt-dim);
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+.hv-question {
+  font-family:'Orbitron',sans-serif;
+  font-size:clamp(.95rem,2.4vw,1.15rem);
+  font-weight:700;
+  letter-spacing:.06em;
+  color:var(--dk-txt);
+  margin-bottom:14px;
+}
+.body-text {
+  font-family:'Rajdhani',sans-serif;
+  font-size:clamp(.95rem,2.2vw,1.08rem);
+  line-height:1.75;
+  color:var(--dk-txt);
+  letter-spacing:.02em;
+  margin-bottom:20px;
+}
+
+/* Upcoming Event section styling */
+.showcase-card {
+  background:rgba(80,140,255,.045);
+  border:1px solid rgba(140,200,255,.28);
+  border-radius:14px;
+  padding:clamp(18px,4vw,28px);
+  margin-top:24px;
+  position:relative; overflow:hidden;
+}
+.showcase-card::before {
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:1px;
+  background:linear-gradient(90deg,transparent,rgba(140,200,255,.5),transparent);
+}
+.showcase-tag {
+  font-family:'Share Tech Mono',monospace;
+  font-size:clamp(.65rem,1.5vw,.75rem);
+  letter-spacing:.16em;
+  color:rgba(140,210,255,.65);
+  text-transform:uppercase;
+  margin-bottom:10px;
+}
+.showcase-headline {
+  font-family:'Orbitron',sans-serif;
+  font-size:clamp(1.05rem,3vw,1.45rem);
+  font-weight:900;
+  letter-spacing:.05em;
+  color:var(--dk-txt);
+  margin-bottom:14px;
+  line-height:1.25;
+}
+.showcase-body {
+  font-family:'Rajdhani',sans-serif;
+  font-size:clamp(.92rem,2.1vw,1.04rem);
+  line-height:1.7;
+  color:var(--dk-txt);
+  letter-spacing:.02em;
+}
+.undisclosed {
+  font-family:'Share Tech Mono',monospace;
+  font-size:clamp(.72rem,1.7vw,.82rem);
+  letter-spacing:.08em;
+  color:rgba(140,210,255,.6);
+  font-style:italic;
+  text-transform:uppercase;
+}
+
+/* Video Preview card placeholder */
+.video-card {
+  background:rgba(255,255,255,.018);
+  border:1px solid var(--dk-border);
+  border-radius:14px;
+  margin:28px 0 0;
+  overflow:hidden;
+  position:relative;
+}
+.video-placeholder {
+  width:100%;
+  aspect-ratio:16/9;
+  background: radial-gradient(ellipse 55% 55% at 50% 50%, rgba(20,60,120,.45) 0%, transparent 70%), linear-gradient(135deg,#050810 0%,#0a1428 50%,#050810 100%);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:14px;
+  position:relative;
+}
+.play-icon {
+  width:clamp(44px,8vw,64px);
+  height:clamp(44px,8vw,64px);
+  background:rgba(7,9,15,0.6);
+  border:1px solid rgba(140,200,255,0.4);
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding-left:4px;
+  box-shadow:0 0 20px rgba(0,0,0,0.4);
+}
+.play-icon svg {
+  width:40%;
+  height:40%;
+  fill:rgba(221,238,255,0.85);
+}
+.video-label {
+  font-family:'Share Tech Mono',monospace;
+  font-size:clamp(0.72rem,1.8vw,0.85rem);
+  letter-spacing:0.1em;
+  color:var(--dk-txt-dim);
+  text-transform:uppercase;
+}
+.video-meta {
+  background:rgba(0,0,0,0.3);
+  padding:14px 18px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  border-top:1px solid var(--dk-border);
+}
+.video-meta-label {
+  font-family:'Orbitron',sans-serif;
+  font-weight:700;
+  font-size:clamp(0.75rem,1.8vw,0.88rem);
+  letter-spacing:0.04em;
+  color:rgba(180,215,255,0.8);
+}
+.video-status {
+  font-family:'Share Tech Mono',monospace;
+  font-size:clamp(0.65rem,1.5vw,0.75rem);
+  letter-spacing:0.08em;
+  color:#ff9e22;
+  background:rgba(255,160,34,0.08);
+  border:1px solid rgba(255,160,34,0.25);
+  padding:3px 8px;
+  border-radius:4px;
+  text-transform:uppercase;
+}
+
+/* Sign-off footer block */
+.signoff-card {
+  padding:24px 8px 0;
+  text-align:center;
+}
+.signoff-text {
+  font-family:'Rajdhani',sans-serif;
+  font-size:clamp(1rem,2.4vw,1.15rem);
+  line-height:1.6;
+  color:var(--dk-txt-dim);
+}
+
+@media (max-width: 480px) {
+  .email-bg { padding: 20px 0 40px; }
+  .card { border-radius: 14px; }
+}
+</style>
+</head>
+<body>
+
+<div class="email-bg">
+  <div class="email-container">
+
+    <div class="email-header">
+      <img class="eye-logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAREAAACbCAYAAABFyK+EAACvtUlEQVR4nOz915MkV5LuCf4OMzNnwZNTIBNI8EIVijS9M5fNyOzI7sjIvu7TPuy/4eb/0b7sXpG7ZO72dHd1d3V1gbPknAQPZ0YO2Ydj7hGZSGQWEGDdlSoSEpGR4e5GjulR/fTTT8WtYcU3MSHEof5ffqNPe8r7h0O+Af5Qrw7PPr1D2/Ou3/f9+sNaCM++QcE9+/VSHm6FPPfzf9zLc2hzz1n/zzv/59lzr99TnmB9qE98Yd/YDnuTn2c/dScCh9uEvu5zvu/r+qdiz72OT7k9L5zIC/tB7btyckKI+YJ/4UB+XDtsdvGDWxD7Iek3/f5d2Cyd+rbfX9jh7dve/3/tqczhEvHD29ddPy2UeuwX3j/nUA+Zkz3vRv6xO5UU8aJ+k+8AIkjkIR9oD8jw7b4/9+yed32f8wbPu32HxbSCe/YHiOfsS0KqZ/6/e+4JBHyIu5/nwPfmPispCIAQPPX7c9f3M0wSz+9ZV+hZ6z80O4kXX38Mz3x+QjyCp+ES+69/xsH9MSa+/v4I4vE9uQb/1UUiM/Pf8vt3YTMn9G2/v7Bvb9/2vn8X9/+n8B4/djT1tM//k8RE/L/ysPaF/bj2rL3gT3Gf0CGEHx3RP2jPS4cOc6weeHYw/W/ffmwQ8vv+/B/7/Z+djsxSmn9bruZPMhJ5YS/sR7XwrxZFeKppiN7zpxKNfJ+RCMSc7k+5UnLYnfqwq+THjhS+7/d/PlnrkOv7J+iA/iQjkR8TnPpTdmD/Fux5eNqf4u2VP3aO/MJe2Av7Y+2nkS08aTqE8FgIdjCcmv38WIjlD8vNfw7P4Hk8hcP2Bhzq1T8+rfyw9lM//sOmA4d9/+fbYWn7h0zHv+femOe+/inX/49KsF5EKy/shb2wr7NnYiIHAdfZz993p秘鲁中南部纳斯卡地区1550年前发生了大地震，摧毁了纳斯卡人祭祀和居住过的中心——卡瓦奇。
+
+日本和秘鲁等国学者组成的研究小组在今年早些时候举行的秘鲁“第六届国际纳斯卡学会”上宣布了上述研究成果。
+
+纳斯卡平原上有许多用巨石、黏土堆砌成的三角形、四角形建筑，纳斯卡地画也闻名于世。从2011年起，山形大学纳斯卡研究所所长坂井正人、大阪大学助教渡边和嗣以及秘鲁和美国的学者，开始在被称为“卡瓦奇”的中心遗址（面积约24平方公里）展开挖掘和测绘工作，并收集这一地区的地质资料。
+
+研究小组在发掘被称为“大金字塔”的建筑附近的巨石祭坛和居住区遗址时，发现了一些明显的地震痕迹，例如部分阶梯式的城墙坍塌，以及墙壁上留有严重的倾斜和龟裂等。研究小组还发现，有一堵巨石城墙朝向前方倒塌，压坏了建在它前面的一座建筑。
