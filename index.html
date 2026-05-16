@@ -25,7 +25,7 @@
 /* ══ RESET ══ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;background:#07090f;overscroll-behavior:none}
-body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent}
+body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overflow:hidden;-webkit-tap-highlight-color:transparent;padding-bottom:env(safe-area-inset-bottom)}
 
 /* ══ PAGE SHELL ══ */
 .page{
@@ -296,13 +296,18 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
   /* Glitch: light → dark */
   const themeMeta = document.querySelector('meta[name="theme-color"]');
 
+  function setColors(bg){
+    themeMeta.content = bg;
+    document.documentElement.style.backgroundColor = bg;
+  }
+
   function glitchToPortal(){
     pDark.classList.remove('hidden');
     pLight.classList.add('glitch-out');
     setTimeout(()=>{
       pLight.classList.add('hidden');
       pLight.classList.remove('glitch-out');
-      themeMeta.content = '#07090f';
+      setColors('#07090f');
       document.getElementById('fname').focus();
     },1050);
   }
@@ -311,7 +316,7 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
     pPW.classList.add('hidden');
     if(firstTime){
       /* First login: show light page then glitch */
-      themeMeta.content = '#88d5f7';
+      setColors('#88d5f7');
       pLight.classList.remove('hidden');
       setTimeout(glitchToPortal, 4000);
     } else {
