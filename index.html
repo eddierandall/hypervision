@@ -9,6 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <title>Hyper Vision Patient Portal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;600;700&family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
 /* ══ VARIABLES ══ */
@@ -89,8 +90,7 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
 }
 
 /* ══ PAGE -1 — PASSWORD GATE ══ */
-#page-pw{background:var(--dk-bg);transition:opacity .55s ease}
-#page-pw.fade-out{opacity:0;pointer-events:none}
+#page-pw{background:var(--dk-bg)}
 #page-pw::before{
   content:'';position:absolute;inset:0;pointer-events:none;
   background:
@@ -215,7 +215,7 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
     <div class="lt-cr"></div><div class="lt-cr"></div>
     <div class="lt-cr"></div><div class="lt-cr"></div>
   </div>
-  <img class="lt-logo" src="images/eye-logo.svg" alt="Hyper Vision">
+  <img class="lt-logo" src="images/asset01.png" alt="">
   <h1 class="lt-title">Welcome to the Hyper Vision Patient Portal</h1>
   <div class="lt-form-card" aria-hidden="true">
     <h2 class="lt-form-heading">Register for the Hyper Vision Patient Portal</h2>
@@ -284,6 +284,24 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
   const pwInp = document.getElementById('pw-input');
   const pwErr = document.getElementById('pw-error');
 
+  /* Supabase Config */
+  const SUPABASE_URL = "https://zsjhbaepqoxlmtrsouel.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_Emb29E4NEPovRTFk4sAnFQ_InbDjayt";
+  let supabaseClient = null;
+
+  /* Initialize Supabase */
+  async function initSupabase(){
+    try {
+      if(typeof supabase === 'undefined') return false;
+      const {createClient} = supabase;
+      supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+      return true;
+    } catch(e) {
+      console.error('Supabase init failed:', e);
+      return false;
+    }
+  }
+
   /* Cookie helpers */
   function setCookie(n,v,h){
     const e=new Date(Date.now()+h*36e5).toUTCString();
@@ -313,31 +331,25 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
     },1050);
   }
 
-  /* Show the light page, then glitch into the dark portal — shared by both entry paths */
-  function runIntro(){
-    setColors('#88d5f7');
-    pLight.classList.remove('hidden');
-    setTimeout(glitchToPortal, 4000);
+  function enterPortal(firstTime){
+    pPW.classList.add('hidden');
+    if(firstTime){
+      setColors('#88d5f7');
+      pLight.classList.remove('hidden');
+      setTimeout(glitchToPortal, 4000);
+    } else {
+      document.getElementById('fname').focus();
+    }
   }
 
-  /* After a correct code: cross-fade the gate away to reveal the light intro beneath it */
-  function enterPortal(){
-    requestAnimationFrame(()=>pPW.classList.add('fade-out'));   /* light sits beneath the gate (z2 < z5) */
-    setTimeout(()=>pPW.classList.add('hidden'), 600);
-    runIntro();
-  }
-
-  /* Returning user: skip ONLY the code gate, still play light → glitch → dark */
-  if(getCookie('hv_auth')==='granted'){
-    pPW.classList.add('hidden');     /* hide gate before first paint so it never flashes */
-    runIntro();
-  }
+  /* Auto-enter if cookie valid — skip light page */
+  if(getCookie('hv_auth')==='granted') enterPortal(false);
 
   /* Password check */
   function checkPassword(){
     if(pwInp.value==='G0B!lls'){
       setCookie('hv_auth','granted',24);
-      enterPortal();
+      enterPortal(true);
     } else {
       pwInp.classList.add('err');
       pwErr.textContent='Access denied.';
@@ -348,6 +360,26 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
   pwBtn.addEventListener('click',checkPassword);
   pwInp.addEventListener('keydown',e=>{ if(e.key==='Enter') checkPassword(); });
 
+  /* Email validation */
+  function isValidEmail(email){
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  }
+
+  /* Check if email exists */
+  async function emailExists(email){
+    if(!supabaseClient) return false;
+    try {
+      const {data, error} = await supabaseClient
+        .from('patient_registrations')
+        .select('id')
+        .eq('email', email.toLowerCase())
+        .single();
+      return data !== null;
+    } catch(e) {
+      return false;
+    }
+  }
+
   /* Validation */
   function validate(){
     let ok=true;
@@ -356,25 +388,72 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
       if(!el.value.trim()){el.classList.add('err');el.focus();setTimeout(()=>el.classList.remove('err'),1500);ok=false;}
     });
     const em=document.getElementById('email');
-    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em.value.trim())){
+    if(!isValidEmail(em.value)){
       em.classList.add('err');em.focus();setTimeout(()=>em.classList.remove('err'),1500);ok=false;
     }
     return ok;
   }
 
+  /* Show error on field */
+  function showFieldError(fieldId, message){
+    const el = document.getElementById(fieldId);
+    el.classList.add('err');
+    el.focus();
+    setTimeout(()=>el.classList.remove('err'), 1500);
+  }
+
   /* Submit */
-  btn.addEventListener('click',()=>{
+  btn.addEventListener('click', async ()=>{
     if(!validate()) return;
-    btn.disabled=true;
+
+    btn.disabled = true;
+    const fname = document.getElementById('fname').value.trim();
+    const lname = document.getElementById('lname').value.trim();
+    const email = document.getElementById('email').value.trim().toLowerCase();
+
+    /* Check if email exists */
+    const exists = await emailExists(email);
+    if(exists){
+      showFieldError('email', 'Email already registered');
+      btn.disabled = false;
+      return;
+    }
+
+    /* Insert into database */
+    if(supabaseClient){
+      try {
+        const {error} = await supabaseClient
+          .from('patient_registrations')
+          .insert([{
+            first_name: fname,
+            last_name: lname,
+            email: email,
+            unsubscribed: false
+          }]);
+
+        if(error) throw error;
+      } catch(e) {
+        console.error('Database error:', e);
+        showFieldError('email', 'Registration failed. Try again.');
+        btn.disabled = false;
+        return;
+      }
+    }
+
+    /* Show success page */
     pDark.classList.add('hidden');
     pTY.classList.remove('hidden');
     pTY.getBoundingClientRect();
     pTY.classList.add('visible');
   });
 
+  /* Enter key to submit */
   document.querySelectorAll('.dk-field input').forEach(inp=>
-    inp.addEventListener('keydown',e=>{ if(e.key==='Enter') btn.click(); })
+    inp.addEventListener('keydown',e=>{ if(e.key==='Enter' && !btn.disabled) btn.click(); })
   );
+
+  /* Initialize on load */
+  window.addEventListener('load', initSupabase);
 })();
 </script>
 </body>
