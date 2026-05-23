@@ -313,29 +313,31 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
     },1050);
   }
 
-  function enterPortal(firstTime){
-    if(firstTime){
-      /* First login: cross-fade the dark gate away to reveal the light page, then glitch */
-      setColors('#88d5f7');
-      pLight.classList.remove('hidden');                 /* light sits beneath the gate (z2 < z5) */
-      requestAnimationFrame(()=>pPW.classList.add('fade-out'));
-      setTimeout(()=>pPW.classList.add('hidden'), 600);
-      setTimeout(glitchToPortal, 4000);
-    } else {
-      /* Returning user: skip light page, go straight to dark */
-      pPW.classList.add('hidden');
-      document.getElementById('fname').focus();
-    }
+  /* Show the light page, then glitch into the dark portal — shared by both entry paths */
+  function runIntro(){
+    setColors('#88d5f7');
+    pLight.classList.remove('hidden');
+    setTimeout(glitchToPortal, 4000);
   }
 
-  /* Auto-enter if cookie valid — skip light page */
-  if(getCookie('hv_auth')==='granted') enterPortal(false);
+  /* After a correct code: cross-fade the gate away to reveal the light intro beneath it */
+  function enterPortal(){
+    requestAnimationFrame(()=>pPW.classList.add('fade-out'));   /* light sits beneath the gate (z2 < z5) */
+    setTimeout(()=>pPW.classList.add('hidden'), 600);
+    runIntro();
+  }
+
+  /* Returning user: skip ONLY the code gate, still play light → glitch → dark */
+  if(getCookie('hv_auth')==='granted'){
+    pPW.classList.add('hidden');     /* hide gate before first paint so it never flashes */
+    runIntro();
+  }
 
   /* Password check */
   function checkPassword(){
     if(pwInp.value==='G0B!lls'){
       setCookie('hv_auth','granted',24);
-      enterPortal(true);
+      enterPortal();
     } else {
       pwInp.classList.add('err');
       pwErr.textContent='Access denied.';
