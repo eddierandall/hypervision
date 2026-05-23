@@ -89,7 +89,8 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
 }
 
 /* ══ PAGE -1 — PASSWORD GATE ══ */
-#page-pw{background:var(--dk-bg)}
+#page-pw{background:var(--dk-bg);transition:opacity .55s ease}
+#page-pw.fade-out{opacity:0;pointer-events:none}
 #page-pw::before{
   content:'';position:absolute;inset:0;pointer-events:none;
   background:
@@ -313,14 +314,16 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
   }
 
   function enterPortal(firstTime){
-    pPW.classList.add('hidden');
     if(firstTime){
-      /* First login: show light page then glitch */
+      /* First login: cross-fade the dark gate away to reveal the light page, then glitch */
       setColors('#88d5f7');
-      pLight.classList.remove('hidden');
+      pLight.classList.remove('hidden');                 /* light sits beneath the gate (z2 < z5) */
+      requestAnimationFrame(()=>pPW.classList.add('fade-out'));
+      setTimeout(()=>pPW.classList.add('hidden'), 600);
       setTimeout(glitchToPortal, 4000);
     } else {
       /* Returning user: skip light page, go straight to dark */
+      pPW.classList.add('hidden');
       document.getElementById('fname').focus();
     }
   }
