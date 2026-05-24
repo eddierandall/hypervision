@@ -168,6 +168,9 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
 .dk-btn:hover{background:rgba(120,185,255,.1);box-shadow:var(--dk-glow)}
 .dk-btn:active{transform:scale(.98)}
 .pw-error{font-family:'Share Tech Mono',monospace;font-size:.78rem;letter-spacing:.08em;color:rgba(255,100,100,.8);text-align:center;margin-top:12px;min-height:1.2em;text-transform:uppercase}
+.dk-msg{font-family:'Share Tech Mono',monospace;font-size:.82rem;letter-spacing:.05em;line-height:1.55;text-align:center;margin-top:14px;min-height:1.2em;color:rgba(150,215,255,.9);text-shadow:var(--dk-glow-sm)}
+.dk-msg.err{color:rgba(255,120,120,.85);text-shadow:none}
+.dk-msg:empty{margin-top:0}
 
 /* ══ THANK YOU ══ */
 #page-ty{opacity:0;transition:opacity .6s ease}
@@ -247,6 +250,7 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
       <div class="dk-field"><label for="lname">Last Name</label><input type="text" id="lname" autocomplete="family-name"></div>
       <div class="dk-field"><label for="email">Email Address</label><input type="email" id="email" autocomplete="email"></div>
       <button class="dk-btn" id="btn-submit" type="button">Submit</button>
+      <p class="dk-msg" id="dk-msg" aria-live="polite"></p>
     </div>
   </div>
 </div>
@@ -297,6 +301,7 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
       },
       body:JSON.stringify(record)
     });
+    if(res.status===409){ const e=new Error('duplicate'); e.duplicate=true; throw e; }
     if(!res.ok) throw new Error('Insert failed: ' + res.status);
   }
 
@@ -384,7 +389,14 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
   }
 
   /* Submit */
+  const dkMsg = document.getElementById('dk-msg');
+  function showMsg(text,isErr){
+    dkMsg.textContent = text;
+    dkMsg.classList.toggle('err', !!isErr);
+  }
+
   btn.addEventListener('click',async ()=>{
+    showMsg('', false);
     if(!validate()) return;
     btn.disabled=true;
     const original=btn.textContent;
@@ -393,7 +405,7 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
       await saveToSupabase({
         first_name:document.getElementById('fname').value.trim(),
         last_name :document.getElementById('lname').value.trim(),
-        email     :document.getElementById('email').value.trim()
+        email     :document.getElementById('email').value.trim().toLowerCase()
       });
       pDark.classList.add('hidden');
       pTY.classList.remove('hidden');
@@ -402,10 +414,14 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
     }catch(err){
       btn.disabled=false;
       btn.textContent=original;
-      const em=document.getElementById('email');
-      em.classList.add('err');
-      setTimeout(()=>em.classList.remove('err'),1500);
-      alert('Could not submit right now. Please try again.');
+      if(err.duplicate){
+        showMsg("You've already registered for Hyper Vision, watch your email for updated information!", false);
+      } else {
+        const em=document.getElementById('email');
+        em.classList.add('err');
+        setTimeout(()=>em.classList.remove('err'),1500);
+        showMsg('Could not submit right now. Please try again.', true);
+      }
     }
   });
 
