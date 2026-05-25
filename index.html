@@ -276,7 +276,7 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
   <div class="dk-content">
     <img class="hv-lockup" src="images/asset03.png" alt="">
     <div class="dk-form-card" style="text-align:center;padding-top:clamp(20px,4vw,32px);padding-bottom:clamp(20px,4vw,32px)">
-      <p class="ty-line">Thank you for registering.<br>We look forward to treating you.</p>
+      <p class="ty-line" id="ty-line">Thank you for registering.<br>We look forward to treating you.</p>
     </div>
   </div>
 </div>
@@ -403,10 +403,13 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
 
   const resubBox = document.getElementById('dk-resub');
   const resubYes = document.getElementById('dk-resub-yes');
+  const tyLine   = document.getElementById('ty-line');
   function hideResub(){ resubBox.classList.remove('show'); }
   function showResub(email){ resubBox.dataset.email = email; resubBox.classList.add('show'); }
 
-  function goThankYou(){
+  function goThankYou(message){
+    if(message) tyLine.innerHTML = message;
+    hideResub();
     pDark.classList.add('hidden');
     pTY.classList.remove('hidden');
     pTY.getBoundingClientRect();
@@ -458,8 +461,7 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
     try{
       const r = await callRegister({ email:resubBox.dataset.email, resubscribe:true });
       if(r.status==='resubscribed'){
-        hideResub();
-        showMsg("You've resubscribed to future transmissions.", false);
+        goThankYou("Welcome back.<br>You've resubscribed to future transmissions.");
       } else {
         throw new Error(r.error || 'unknown');
       }
