@@ -43,6 +43,7 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
 #page-light{z-index:2}
 #page-dark {z-index:1}
 #page-ty   {z-index:3}
+#page-resub{z-index:3}
 
 /* ══ GLITCH OVERLAY ══ */
 #glitch-overlay{
@@ -171,13 +172,12 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
 .dk-msg{font-family:'Share Tech Mono',monospace;font-size:.82rem;letter-spacing:.05em;line-height:1.55;text-align:center;margin-top:14px;min-height:1.2em;color:rgba(150,215,255,.9);text-shadow:var(--dk-glow-sm)}
 .dk-msg.err{color:rgba(255,120,120,.85);text-shadow:none}
 .dk-msg:empty{margin-top:0}
-.dk-resub{display:none;margin-top:10px}
-.dk-resub.show{display:block}
-.dk-resub-text{font-family:'Share Tech Mono',monospace;font-size:.82rem;letter-spacing:.05em;line-height:1.6;text-align:center;color:rgba(150,215,255,.9);text-shadow:var(--dk-glow-sm);margin:0 0 12px}
 
 /* ══ THANK YOU ══ */
 #page-ty{opacity:0;transition:opacity .6s ease}
 #page-ty.visible{opacity:1}
+#page-resub{opacity:0;transition:opacity .6s ease}
+#page-resub.visible{opacity:1}
 .hv-lockup{display:block;width:min(88vw,640px);height:auto;margin:0 auto clamp(18px,3vw,30px)}
 .ty-line{font-family:'Share Tech Mono',monospace;font-size:clamp(.78rem,2vw,1rem);letter-spacing:.1em;color:var(--dk-txt-dim);text-transform:uppercase;line-height:1.75;text-align:center}
 
@@ -254,15 +254,32 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
       <div class="dk-field"><label for="email">Email Address</label><input type="email" id="email" autocomplete="email"></div>
       <button class="dk-btn" id="btn-submit" type="button">Submit</button>
       <p class="dk-msg" id="dk-msg" aria-live="polite"></p>
-      <div class="dk-resub" id="dk-resub">
-        <p class="dk-resub-text">This email previously unsubscribed from Hyper Vision. Would you like to resubscribe to future transmissions?</p>
-        <button class="dk-btn" id="dk-resub-yes" type="button">Yes, Resubscribe</button>
-      </div>
     </div>
   </div>
 </div>
 
 <!-- PAGE 2: THANK YOU -->
+<div class="page hidden dk-bg-full dk-depth" id="page-resub">
+  <div class="dk-sparks" aria-hidden="true">
+    <span class="dk-spark">✛</span><span class="dk-spark">✛</span>
+    <span class="dk-spark">✛</span><span class="dk-spark">✛</span>
+    <span class="dk-spark">✛</span><span class="dk-spark">✛</span>
+  </div>
+  <div class="dk-chrome" aria-hidden="true">
+    <div class="dk-cr"></div><div class="dk-cr"></div>
+    <div class="dk-cr"></div><div class="dk-cr"></div>
+  </div>
+  <div class="dk-content">
+    <img class="hv-lockup" src="images/asset03.png" alt="">
+    <div class="dk-form-card" style="text-align:center;padding-top:clamp(20px,4vw,32px);padding-bottom:clamp(20px,4vw,32px)">
+      <p class="ty-line">This email previously unsubscribed from Hyper Vision.<br>Would you like to resubscribe to future transmissions?</p>
+      <button class="dk-btn" id="resub-yes" type="button" style="margin-top:18px">Yes, Resubscribe</button>
+      <p style="margin-top:14px"><a href="#" id="resub-back" style="font-family:'Share Tech Mono',monospace;font-size:.8rem;letter-spacing:.05em;color:var(--dk-txt-dim);text-decoration:underline">Not now</a></p>
+      <p class="dk-msg" id="resub-msg" aria-live="polite"></p>
+    </div>
+  </div>
+</div>
+
 <div class="page hidden dk-bg-full dk-depth" id="page-ty">
   <div class="dk-sparks" aria-hidden="true">
     <span class="dk-spark">✛</span><span class="dk-spark">✛</span>
@@ -401,19 +418,24 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
     dkMsg.classList.toggle('err', !!isErr);
   }
 
-  const resubBox = document.getElementById('dk-resub');
-  const resubYes = document.getElementById('dk-resub-yes');
+  const pResub   = document.getElementById('page-resub');
+  const resubYes = document.getElementById('resub-yes');
+  const resubBack= document.getElementById('resub-back');
+  const resubMsg = document.getElementById('resub-msg');
   const tyLine   = document.getElementById('ty-line');
-  function hideResub(){ resubBox.classList.remove('show'); }
-  function showResub(email){ resubBox.dataset.email = email; resubBox.classList.add('show'); }
+
+  function showPage(target){
+    [pDark, pResub, pTY].forEach(p=>{ p.classList.add('hidden'); p.classList.remove('visible'); });
+    target.classList.remove('hidden');
+    target.getBoundingClientRect();
+    target.classList.add('visible');
+  }
+  function goResub(email){ pResub.dataset.email = email; resubMsg.textContent=''; showPage(pResub); }
+  function backToForm(){ pResub.classList.add('hidden'); pResub.classList.remove('visible'); pDark.classList.remove('hidden'); }
 
   function goThankYou(message){
     if(message) tyLine.innerHTML = message;
-    hideResub();
-    pDark.classList.add('hidden');
-    pTY.classList.remove('hidden');
-    pTY.getBoundingClientRect();
-    pTY.classList.add('visible');
+    showPage(pTY);
   }
 
   function formData(){
@@ -426,7 +448,6 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
 
   btn.addEventListener('click',async ()=>{
     showMsg('', false);
-    hideResub();
     if(!validate()) return;
     btn.disabled=true;
     const original=btn.textContent;
@@ -440,7 +461,7 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
         showMsg("You've already registered for Hyper Vision, watch your email for updated information!", false);
       } else if(r.status==='unsubscribed'){
         btn.disabled=false; btn.textContent=original;
-        showResub(document.getElementById('email').value.trim().toLowerCase());
+        goResub(document.getElementById('email').value.trim().toLowerCase());
       } else {
         throw new Error(r.error || 'unknown');
       }
@@ -458,8 +479,9 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
     resubYes.disabled=true;
     const original=resubYes.textContent;
     resubYes.textContent='Resubscribing…';
+    resubMsg.textContent='';
     try{
-      const r = await callRegister({ email:resubBox.dataset.email, resubscribe:true });
+      const r = await callRegister({ email:pResub.dataset.email, resubscribe:true });
       if(r.status==='resubscribed'){
         goThankYou("Welcome back.<br>You've resubscribed to future transmissions.");
       } else {
@@ -468,9 +490,11 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
     }catch(err){
       resubYes.disabled=false;
       resubYes.textContent=original;
-      showMsg('Could not resubscribe right now. Please try again.', true);
+      resubMsg.textContent='Could not resubscribe right now. Please try again.';
     }
   });
+
+  resubBack.addEventListener('click',(e)=>{ e.preventDefault(); backToForm(); });
 
   document.querySelectorAll('.dk-field input').forEach(inp=>
     inp.addEventListener('keydown',e=>{ if(e.key==='Enter') btn.click(); })
