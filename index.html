@@ -171,7 +171,8 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
 .dk-msg{font-family:'Share Tech Mono',monospace;font-size:.82rem;letter-spacing:.05em;line-height:1.55;text-align:center;margin-top:14px;min-height:1.2em;color:rgba(150,215,255,.9);text-shadow:var(--dk-glow-sm)}
 .dk-msg.err{color:rgba(255,120,120,.85);text-shadow:none}
 .dk-msg:empty{margin-top:0}
-.dk-resub{margin-top:10px}
+.dk-resub{display:none;margin-top:10px}
+.dk-resub.show{display:block}
 .dk-resub-text{font-family:'Share Tech Mono',monospace;font-size:.82rem;letter-spacing:.05em;line-height:1.6;text-align:center;color:rgba(150,215,255,.9);text-shadow:var(--dk-glow-sm);margin:0 0 12px}
 
 /* ══ THANK YOU ══ */
@@ -253,7 +254,7 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
       <div class="dk-field"><label for="email">Email Address</label><input type="email" id="email" autocomplete="email"></div>
       <button class="dk-btn" id="btn-submit" type="button">Submit</button>
       <p class="dk-msg" id="dk-msg" aria-live="polite"></p>
-      <div class="dk-resub hidden" id="dk-resub">
+      <div class="dk-resub" id="dk-resub">
         <p class="dk-resub-text">This email previously unsubscribed from Hyper Vision. Would you like to resubscribe to future transmissions?</p>
         <button class="dk-btn" id="dk-resub-yes" type="button">Yes, Resubscribe</button>
       </div>
@@ -402,8 +403,8 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
 
   const resubBox = document.getElementById('dk-resub');
   const resubYes = document.getElementById('dk-resub-yes');
-  function hideResub(){ resubBox.classList.add('hidden'); }
-  function showResub(email){ resubBox.dataset.email = email; resubBox.classList.remove('hidden'); }
+  function hideResub(){ resubBox.classList.remove('show'); }
+  function showResub(email){ resubBox.dataset.email = email; resubBox.classList.add('show'); }
 
   function goThankYou(){
     pDark.classList.add('hidden');
