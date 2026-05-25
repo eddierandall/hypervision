@@ -171,6 +171,8 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
 .dk-msg{font-family:'Share Tech Mono',monospace;font-size:.82rem;letter-spacing:.05em;line-height:1.55;text-align:center;margin-top:14px;min-height:1.2em;color:rgba(150,215,255,.9);text-shadow:var(--dk-glow-sm)}
 .dk-msg.err{color:rgba(255,120,120,.85);text-shadow:none}
 .dk-msg:empty{margin-top:0}
+.dk-resub{margin-top:10px}
+.dk-resub-text{font-family:'Share Tech Mono',monospace;font-size:.82rem;letter-spacing:.05em;line-height:1.6;text-align:center;color:rgba(150,215,255,.9);text-shadow:var(--dk-glow-sm);margin:0 0 12px}
 
 /* ══ THANK YOU ══ */
 #page-ty{opacity:0;transition:opacity .6s ease}
@@ -251,6 +253,10 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
       <div class="dk-field"><label for="email">Email Address</label><input type="email" id="email" autocomplete="email"></div>
       <button class="dk-btn" id="btn-submit" type="button">Submit</button>
       <p class="dk-msg" id="dk-msg" aria-live="polite"></p>
+      <div class="dk-resub hidden" id="dk-resub">
+        <p class="dk-resub-text">This email previously unsubscribed from Hyper Vision. Would you like to resubscribe to future transmissions?</p>
+        <button class="dk-btn" id="dk-resub-yes" type="button">Yes, Resubscribe</button>
+      </div>
     </div>
   </div>
 </div>
@@ -290,19 +296,21 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
   const SB_KEY   = 'sb_publishable_Emb29E4NEPovRTFk4sAnFQ_InbDjayt';
   const SB_TABLE = 'patient_registrations';
 
-  async function saveToSupabase(record){
-    const res = await fetch(SB_URL + '/rest/v1/' + SB_TABLE, {
+  const REGISTER_URL = SB_URL + '/functions/v1/register';
+
+  /* All registration logic runs server-side in the `register` Edge Function:
+     it checks if the email exists, inserts new sign-ups, and (on confirm)
+     resubscribes previously-unsubscribed addresses. Returns a status string. */
+  async function callRegister(body){
+    const res = await fetch(REGISTER_URL, {
       method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'apikey':SB_KEY,
-        'Authorization':'Bearer ' + SB_KEY,
-        'Prefer':'return=minimal'
-      },
-      body:JSON.stringify(record)
+      headers:{ 'Content-Type':'application/json' },
+      body:JSON.stringify(body)
     });
-    if(res.status===409){ const e=new Error('duplicate'); e.duplicate=true; throw e; }
-    if(!res.ok) throw new Error('Insert failed: ' + res.status);
+    let data = {};
+    try{ data = await res.json(); }catch{}
+    if(!res.ok && !data.status) throw new Error('register failed: ' + res.status);
+    return data;
   }
 
   const pPW   = document.getElementById('page-pw');
@@ -392,33 +400,72 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
     dkMsg.classList.toggle('err', !!isErr);
   }
 
+  const resubBox = document.getElementById('dk-resub');
+  const resubYes = document.getElementById('dk-resub-yes');
+  function hideResub(){ resubBox.classList.add('hidden'); }
+  function showResub(email){ resubBox.dataset.email = email; resubBox.classList.remove('hidden'); }
+
+  function goThankYou(){
+    pDark.classList.add('hidden');
+    pTY.classList.remove('hidden');
+    pTY.getBoundingClientRect();
+    pTY.classList.add('visible');
+  }
+
+  function formData(){
+    return {
+      first_name:document.getElementById('fname').value.trim(),
+      last_name :document.getElementById('lname').value.trim(),
+      email     :document.getElementById('email').value.trim().toLowerCase()
+    };
+  }
+
   btn.addEventListener('click',async ()=>{
     showMsg('', false);
+    hideResub();
     if(!validate()) return;
     btn.disabled=true;
     const original=btn.textContent;
     btn.textContent='Submitting…';
     try{
-      await saveToSupabase({
-        first_name:document.getElementById('fname').value.trim(),
-        last_name :document.getElementById('lname').value.trim(),
-        email     :document.getElementById('email').value.trim().toLowerCase()
-      });
-      pDark.classList.add('hidden');
-      pTY.classList.remove('hidden');
-      pTY.getBoundingClientRect();
-      pTY.classList.add('visible');
+      const r = await callRegister(formData());
+      if(r.status==='registered'){
+        goThankYou();
+      } else if(r.status==='already_subscribed'){
+        btn.disabled=false; btn.textContent=original;
+        showMsg("You've already registered for Hyper Vision, watch your email for updated information!", false);
+      } else if(r.status==='unsubscribed'){
+        btn.disabled=false; btn.textContent=original;
+        showResub(document.getElementById('email').value.trim().toLowerCase());
+      } else {
+        throw new Error(r.error || 'unknown');
+      }
     }catch(err){
       btn.disabled=false;
       btn.textContent=original;
-      if(err.duplicate){
-        showMsg("You've already registered for Hyper Vision, watch your email for updated information!", false);
+      const em=document.getElementById('email');
+      em.classList.add('err');
+      setTimeout(()=>em.classList.remove('err'),1500);
+      showMsg('Could not submit right now. Please try again.', true);
+    }
+  });
+
+  resubYes.addEventListener('click',async ()=>{
+    resubYes.disabled=true;
+    const original=resubYes.textContent;
+    resubYes.textContent='Resubscribing…';
+    try{
+      const r = await callRegister({ email:resubBox.dataset.email, resubscribe:true });
+      if(r.status==='resubscribed'){
+        hideResub();
+        showMsg("You've resubscribed to future transmissions.", false);
       } else {
-        const em=document.getElementById('email');
-        em.classList.add('err');
-        setTimeout(()=>em.classList.remove('err'),1500);
-        showMsg('Could not submit right now. Please try again.', true);
+        throw new Error(r.error || 'unknown');
       }
+    }catch(err){
+      resubYes.disabled=false;
+      resubYes.textContent=original;
+      showMsg('Could not resubscribe right now. Please try again.', true);
     }
   });
 
