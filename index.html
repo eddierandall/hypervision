@@ -246,8 +246,8 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
     <img class="dk-header-img" src="images/asset02.png" alt="">
     <div class="dk-form-card" role="main">
       <h2 class="dk-form-heading">Register for the Hyper Vision Patient Portal</h2>
-      <div class="dk-field"><label for="fname">First Name</label><input type="text" id="fname" autocomplete="given-name"></div>
-      <div class="dk-field"><label for="lname">Last Name</label><input type="text" id="lname" autocomplete="family-name"></div>
+      <div class="dk-field"><label for="fname">First Name <span style="opacity:.6">(optional)</span></label><input type="text" id="fname" autocomplete="given-name"></div>
+      <div class="dk-field"><label for="lname">Last Name <span style="opacity:.6">(optional)</span></label><input type="text" id="lname" autocomplete="family-name"></div>
       <div class="dk-field"><label for="email">Email Address</label><input type="email" id="email" autocomplete="email"></div>
       <button class="dk-btn" id="btn-submit" type="button">Submit</button>
       <p class="dk-msg" id="dk-msg" aria-live="polite"></p>
@@ -377,10 +377,7 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
   /* Validation */
   function validate(){
     let ok=true;
-    ['fname','lname'].forEach(id=>{
-      const el=document.getElementById(id);
-      if(!el.value.trim()){el.classList.add('err');el.focus();setTimeout(()=>el.classList.remove('err'),1500);ok=false;}
-    });
+    /* First and last name are optional — only the email is validated. */
     const em=document.getElementById('email');
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em.value.trim())){
       em.classList.add('err');em.focus();setTimeout(()=>em.classList.remove('err'),1500);ok=false;
