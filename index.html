@@ -43,7 +43,6 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
 #page-light{z-index:2}
 #page-dark {z-index:1}
 #page-ty   {z-index:3}
-#page-resub{z-index:3}
 
 /* ══ GLITCH OVERLAY ══ */
 #glitch-overlay{
@@ -176,8 +175,6 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
 /* ══ THANK YOU ══ */
 #page-ty{opacity:0;transition:opacity .6s ease}
 #page-ty.visible{opacity:1}
-#page-resub{opacity:0;transition:opacity .6s ease}
-#page-resub.visible{opacity:1}
 .hv-lockup{display:block;width:min(88vw,640px);height:auto;margin:0 auto clamp(18px,3vw,30px)}
 .ty-line{font-family:'Share Tech Mono',monospace;font-size:clamp(.78rem,2vw,1rem);letter-spacing:.1em;color:var(--dk-txt-dim);text-transform:uppercase;line-height:1.75;text-align:center}
 
@@ -259,27 +256,6 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
 </div>
 
 <!-- PAGE 2: THANK YOU -->
-<div class="page hidden dk-bg-full dk-depth" id="page-resub">
-  <div class="dk-sparks" aria-hidden="true">
-    <span class="dk-spark">✛</span><span class="dk-spark">✛</span>
-    <span class="dk-spark">✛</span><span class="dk-spark">✛</span>
-    <span class="dk-spark">✛</span><span class="dk-spark">✛</span>
-  </div>
-  <div class="dk-chrome" aria-hidden="true">
-    <div class="dk-cr"></div><div class="dk-cr"></div>
-    <div class="dk-cr"></div><div class="dk-cr"></div>
-  </div>
-  <div class="dk-content">
-    <img class="hv-lockup" src="images/asset03.png" alt="">
-    <div class="dk-form-card" style="text-align:center;padding-top:clamp(20px,4vw,32px);padding-bottom:clamp(20px,4vw,32px)">
-      <p class="ty-line">This email previously unsubscribed from Hyper Vision.<br>Would you like to resubscribe to future transmissions?</p>
-      <button class="dk-btn" id="resub-yes" type="button" style="margin-top:18px">Yes, Resubscribe</button>
-      <p style="margin-top:14px"><a href="#" id="resub-back" style="font-family:'Share Tech Mono',monospace;font-size:.8rem;letter-spacing:.05em;color:var(--dk-txt-dim);text-decoration:underline">Not now</a></p>
-      <p class="dk-msg" id="resub-msg" aria-live="polite"></p>
-    </div>
-  </div>
-</div>
-
 <div class="page hidden dk-bg-full dk-depth" id="page-ty">
   <div class="dk-sparks" aria-hidden="true">
     <span class="dk-spark">✛</span><span class="dk-spark">✛</span>
@@ -293,7 +269,7 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
   <div class="dk-content">
     <img class="hv-lockup" src="images/asset03.png" alt="">
     <div class="dk-form-card" style="text-align:center;padding-top:clamp(20px,4vw,32px);padding-bottom:clamp(20px,4vw,32px)">
-      <p class="ty-line" id="ty-line">Thank you for registering.<br>We look forward to treating you.</p>
+      <p class="ty-line">Thank you for registering.<br>We look forward to treating you.</p>
     </div>
   </div>
 </div>
@@ -314,21 +290,40 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
   const SB_KEY   = 'sb_publishable_Emb29E4NEPovRTFk4sAnFQ_InbDjayt';
   const SB_TABLE = 'patient_registrations';
 
-  const REGISTER_URL = SB_URL + '/functions/v1/register';
+  /* ══ GO-LIVE DATE ═════════════════════════════════════════════
+     Site unlocks at 10:00 AM CST (UTC-6) on June 1, 2026.
+     CST = UTC-6  →  10:00 CST = 16:00 UTC
+     To adjust: change the ISO string below.                    */
+  const GO_LIVE = new Date('2026-06-01T16:00:00Z');
 
-  /* All registration logic runs server-side in the `register` Edge Function:
-     it checks if the email exists, inserts new sign-ups, and (on confirm)
-     resubscribes previously-unsubscribed addresses. Returns a status string. */
-  async function callRegister(body){
-    const res = await fetch(REGISTER_URL, {
+  /* ══ COUNTDOWN (disabled — may revisit) ══════════════════════
+  // const countdownEl = document.getElementById('countdown');
+  // function updateCountdown(){
+  //   const diff = GO_LIVE - Date.now();
+  //   if(diff <= 0){ clearInterval(countdownTimer); return; }
+  //   const d = Math.floor(diff / 864e5);
+  //   const h = Math.floor((diff % 864e5) / 36e5);
+  //   const m = Math.floor((diff % 36e5) / 6e4);
+  //   const s = Math.floor((diff % 6e4) / 1e3);
+  //   countdownEl.textContent = d+'d '+h+'h '+m+'m '+s+'s';
+  // }
+  // const countdownTimer = setInterval(updateCountdown, 1000);
+  // updateCountdown();
+  ══════════════════════════════════════════════════════════════ */
+
+  async function saveToSupabase(record){
+    const res = await fetch(SB_URL + '/rest/v1/' + SB_TABLE, {
       method:'POST',
-      headers:{ 'Content-Type':'application/json' },
-      body:JSON.stringify(body)
+      headers:{
+        'Content-Type':'application/json',
+        'apikey':SB_KEY,
+        'Authorization':'Bearer ' + SB_KEY,
+        'Prefer':'return=minimal'
+      },
+      body:JSON.stringify(record)
     });
-    let data = {};
-    try{ data = await res.json(); }catch{}
-    if(!res.ok && !data.status) throw new Error('register failed: ' + res.status);
-    return data;
+    if(res.status===409){ const e=new Error('duplicate'); e.duplicate=true; throw e; }
+    if(!res.ok) throw new Error('Insert failed: ' + res.status);
   }
 
   const pPW   = document.getElementById('page-pw');
@@ -339,8 +334,13 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
   const pwBtn = document.getElementById('pw-btn');
   const pwInp = document.getElementById('pw-input');
   const pwErr = document.getElementById('pw-error');
+  const themeMeta = document.querySelector('meta[name="theme-color"]');
 
-  /* Cookie helpers */
+  /* ── Helpers ── */
+  function setColors(bg){
+    themeMeta.content = bg;
+    document.documentElement.style.backgroundColor = bg;
+  }
   function setCookie(n,v,h){
     const e=new Date(Date.now()+h*36e5).toUTCString();
     document.cookie=n+'='+v+';expires='+e+';path=/;SameSite=Strict';
@@ -350,14 +350,7 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
       .find(c=>c.startsWith(n+'='))?.split('=')[1]||null;
   }
 
-  /* Glitch: light → dark */
-  const themeMeta = document.querySelector('meta[name="theme-color"]');
-
-  function setColors(bg){
-    themeMeta.content = bg;
-    document.documentElement.style.backgroundColor = bg;
-  }
-
+  /* ── Glitch: light → dark ── */
   function glitchToPortal(){
     pDark.classList.remove('hidden');
     pLight.classList.add('glitch-out');
@@ -366,44 +359,64 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
       pLight.classList.remove('glitch-out');
       setColors('#07090f');
       document.getElementById('fname').focus();
-    },1050);
+    }, 1050);
   }
 
+  /* ── Full light → glitch → dark sequence ── */
+  function showLightThenPortal(){
+    setColors('#88d5f7');
+    pLight.classList.remove('hidden');
+    setTimeout(glitchToPortal, 4000);
+  }
+
+  /* ── Enter portal (post-password or returning cookie) ── */
   function enterPortal(firstTime){
     pPW.classList.add('hidden');
     if(firstTime){
-      /* First login: show light page then glitch */
-      setColors('#88d5f7');
-      pLight.classList.remove('hidden');
-      setTimeout(glitchToPortal, 4000);
+      showLightThenPortal();
     } else {
       /* Returning user: skip light page, go straight to dark */
       document.getElementById('fname').focus();
     }
   }
 
-  /* Auto-enter if cookie valid — skip light page */
-  if(getCookie('hv_auth')==='granted') enterPortal(false);
-
-  /* Password check */
-  function checkPassword(){
-    if(pwInp.value==='G0B!lls'){
-      setCookie('hv_auth','granted',24);
-      enterPortal(true);
-    } else {
-      pwInp.classList.add('err');
-      pwErr.textContent='Access denied.';
-      pwInp.value='';
-      setTimeout(()=>{ pwInp.classList.remove('err'); pwErr.textContent=''; },1800);
+  /* ══ GO-LIVE GATE ═════════════════════════════════════════════
+     If the current time is at or past GO_LIVE, bypass the
+     password entirely: run the full light → glitch → dark flow.
+     Otherwise fall through to the password gateway as normal.  */
+  if(Date.now() >= GO_LIVE.getTime()){
+    /* Site is live — no password needed */
+    pPW.classList.add('hidden');
+    showLightThenPortal();
+  } else {
+    /* Pre-launch: show password gate (honour existing cookie) */
+    if(getCookie('hv_auth')==='granted'){
+      enterPortal(false);
     }
-  }
-  pwBtn.addEventListener('click',checkPassword);
-  pwInp.addEventListener('keydown',e=>{ if(e.key==='Enter') checkPassword(); });
 
-  /* Validation */
+    /* Password check */
+    function checkPassword(){
+      if(pwInp.value==='G0B!lls'){
+        setCookie('hv_auth','granted',24);
+        enterPortal(true);
+      } else {
+        pwInp.classList.add('err');
+        pwErr.textContent='Access denied.';
+        pwInp.value='';
+        setTimeout(()=>{ pwInp.classList.remove('err'); pwErr.textContent=''; }, 1800);
+      }
+    }
+    pwBtn.addEventListener('click', checkPassword);
+    pwInp.addEventListener('keydown', e=>{ if(e.key==='Enter') checkPassword(); });
+  }
+
+  /* ══ FORM VALIDATION & SUBMIT ═════════════════════════════════ */
   function validate(){
     let ok=true;
-    /* First and last name are optional — only the email is validated. */
+    ['fname','lname'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(!el.value.trim()){el.classList.add('err');el.focus();setTimeout(()=>el.classList.remove('err'),1500);ok=false;}
+    });
     const em=document.getElementById('email');
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em.value.trim())){
       em.classList.add('err');em.focus();setTimeout(()=>em.classList.remove('err'),1500);ok=false;
@@ -411,93 +424,44 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
     return ok;
   }
 
-  /* Submit */
   const dkMsg = document.getElementById('dk-msg');
   function showMsg(text,isErr){
     dkMsg.textContent = text;
     dkMsg.classList.toggle('err', !!isErr);
   }
 
-  const pResub   = document.getElementById('page-resub');
-  const resubYes = document.getElementById('resub-yes');
-  const resubBack= document.getElementById('resub-back');
-  const resubMsg = document.getElementById('resub-msg');
-  const tyLine   = document.getElementById('ty-line');
-
-  function showPage(target){
-    [pDark, pResub, pTY].forEach(p=>{ p.classList.add('hidden'); p.classList.remove('visible'); });
-    target.classList.remove('hidden');
-    target.getBoundingClientRect();
-    target.classList.add('visible');
-  }
-  function goResub(email){ pResub.dataset.email = email; resubMsg.textContent=''; showPage(pResub); }
-  function backToForm(){ pResub.classList.add('hidden'); pResub.classList.remove('visible'); pDark.classList.remove('hidden'); }
-
-  function goThankYou(message){
-    if(message) tyLine.innerHTML = message;
-    showPage(pTY);
-  }
-
-  function formData(){
-    return {
-      first_name:document.getElementById('fname').value.trim(),
-      last_name :document.getElementById('lname').value.trim(),
-      email     :document.getElementById('email').value.trim().toLowerCase()
-    };
-  }
-
-  btn.addEventListener('click',async ()=>{
+  btn.addEventListener('click', async ()=>{
     showMsg('', false);
     if(!validate()) return;
     btn.disabled=true;
     const original=btn.textContent;
     btn.textContent='Submitting…';
     try{
-      const r = await callRegister(formData());
-      if(r.status==='registered'){
-        goThankYou();
-      } else if(r.status==='already_subscribed'){
-        btn.disabled=false; btn.textContent=original;
-        showMsg("You've already registered for Hyper Vision, watch your email for updated information!", false);
-      } else if(r.status==='unsubscribed'){
-        btn.disabled=false; btn.textContent=original;
-        goResub(document.getElementById('email').value.trim().toLowerCase());
-      } else {
-        throw new Error(r.error || 'unknown');
-      }
+      await saveToSupabase({
+        first_name:document.getElementById('fname').value.trim(),
+        last_name :document.getElementById('lname').value.trim(),
+        email     :document.getElementById('email').value.trim().toLowerCase()
+      });
+      pDark.classList.add('hidden');
+      pTY.classList.remove('hidden');
+      pTY.getBoundingClientRect();
+      pTY.classList.add('visible');
     }catch(err){
       btn.disabled=false;
       btn.textContent=original;
-      const em=document.getElementById('email');
-      em.classList.add('err');
-      setTimeout(()=>em.classList.remove('err'),1500);
-      showMsg('Could not submit right now. Please try again.', true);
-    }
-  });
-
-  resubYes.addEventListener('click',async ()=>{
-    resubYes.disabled=true;
-    const original=resubYes.textContent;
-    resubYes.textContent='Resubscribing…';
-    resubMsg.textContent='';
-    try{
-      const r = await callRegister({ email:pResub.dataset.email, resubscribe:true });
-      if(r.status==='resubscribed'){
-        goThankYou("Welcome back.<br>You've resubscribed to future transmissions.");
+      if(err.duplicate){
+        showMsg("You've already registered for Hyper Vision, watch your email for updated information!", false);
       } else {
-        throw new Error(r.error || 'unknown');
+        const em=document.getElementById('email');
+        em.classList.add('err');
+        setTimeout(()=>em.classList.remove('err'),1500);
+        showMsg('Could not submit right now. Please try again.', true);
       }
-    }catch(err){
-      resubYes.disabled=false;
-      resubYes.textContent=original;
-      resubMsg.textContent='Could not resubscribe right now. Please try again.';
     }
   });
-
-  resubBack.addEventListener('click',(e)=>{ e.preventDefault(); backToForm(); });
 
   document.querySelectorAll('.dk-field input').forEach(inp=>
-    inp.addEventListener('keydown',e=>{ if(e.key==='Enter') btn.click(); })
+    inp.addEventListener('keydown', e=>{ if(e.key==='Enter') btn.click(); })
   );
 })();
 </script>
