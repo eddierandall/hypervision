@@ -177,6 +177,9 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
 #page-ty.visible{opacity:1}
 .hv-lockup{display:block;width:min(88vw,640px);height:auto;margin:0 auto clamp(18px,3vw,30px)}
 .ty-line{font-family:'Share Tech Mono',monospace;font-size:clamp(.78rem,2vw,1rem);letter-spacing:.1em;color:var(--dk-txt-dim);text-transform:uppercase;line-height:1.75;text-align:center}
+.ty-divider{width:60%;margin:clamp(14px,2.5vw,22px) auto;border:none;border-top:1px solid var(--dk-border)}
+.ty-spam{font-size:clamp(.68rem,1.7vw,.84rem);color:rgba(150,200,255,.45);letter-spacing:.07em;line-height:1.8}
+.ty-label{font-size:clamp(.62rem,1.5vw,.76rem);color:rgba(100,170,255,.5);letter-spacing:.18em}
 
 /* ══ RESPONSIVE ══ */
 @media(max-width:540px){.lt-chrome,.dk-chrome{display:none}}
@@ -270,6 +273,14 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
     <img class="hv-lockup" src="images/asset03.png" alt="">
     <div class="dk-form-card" style="text-align:center;padding-top:clamp(20px,4vw,32px);padding-bottom:clamp(20px,4vw,32px)">
       <p class="ty-line">Thank you for registering.<br>We look forward to treating you.</p>
+      <div class="ty-divider" aria-hidden="true"></div>
+      <p class="ty-line ty-spam">
+        <span class="ty-label">// TRANSMISSION NOTE //</span><br>
+        A confirmation has been dispatched to your inbox.<br>
+        If it doesn't arrive, check your spam or junk folder<br>
+        and mark our emails as safe to ensure<br>
+        all future communications reach you.
+      </p>
     </div>
   </div>
 </div>
