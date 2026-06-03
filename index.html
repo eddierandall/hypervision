@@ -168,6 +168,7 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
 .dk-btn:hover{background:rgba(120,185,255,.1);box-shadow:var(--dk-glow)}
 .dk-btn:active{transform:scale(.98)}
 .pw-error{font-family:'Share Tech Mono',monospace;font-size:.78rem;letter-spacing:.08em;color:rgba(255,100,100,.8);text-align:center;margin-top:12px;min-height:1.2em;text-transform:uppercase}
+.pw-countdown{font-family:'Share Tech Mono',monospace;font-size:.6rem;letter-spacing:.14em;color:rgba(120,170,220,.28);text-align:center;margin-top:8px;text-transform:uppercase;line-height:1.7}
 .dk-msg{font-family:'Share Tech Mono',monospace;font-size:.82rem;letter-spacing:.05em;line-height:1.55;text-align:center;margin-top:14px;min-height:1.2em;color:rgba(150,215,255,.9);text-shadow:var(--dk-glow-sm)}
 .dk-msg.err{color:rgba(255,120,120,.85);text-shadow:none}
 .dk-msg:empty{margin-top:0}
@@ -210,6 +211,7 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
       </div>
       <button class="dk-btn" id="pw-btn" type="button">Enter</button>
       <p class="pw-error" id="pw-error" aria-live="polite"></p>
+      <p class="pw-countdown" id="pw-countdown" aria-live="off"></p>
     </div>
   </div>
 </div>
@@ -235,7 +237,7 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
 <div id="glitch-overlay" aria-hidden="true"></div>
 
 <!-- PAGE 1: DARK FORM -->
-<div class="page dk-bg-full dk-depth" id="page-dark">
+<div class="page dk-bg-full dk-depth hidden" id="page-dark">
   <div class="dk-sparks" aria-hidden="true">
     <span class="dk-spark">✛</span><span class="dk-spark">✛</span>
     <span class="dk-spark">✛</span><span class="dk-spark">✛</span>
@@ -384,6 +386,8 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
       showLightThenPortal();
     } else {
       /* Returning user: skip light page, go straight to dark */
+      pDark.classList.remove('hidden');
+      setColors('#07090f');
       document.getElementById('fname').focus();
     }
   }
@@ -406,6 +410,7 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
     function checkPassword(){
       if(pwInp.value==='G0B!lls'){
         setCookie('hv_auth','granted',24);
+        clearInterval(cdTimer);
         enterPortal(true);
       } else {
         pwInp.classList.add('err');
@@ -414,6 +419,25 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
         setTimeout(()=>{ pwInp.classList.remove('err'); pwErr.textContent=''; }, 1800);
       }
     }
+
+    /* Countdown display */
+    const cdEl = document.getElementById('pw-countdown');
+    function updateCD(){
+      const diff = GO_LIVE.getTime() - Date.now();
+      if(diff <= 0){ clearInterval(cdTimer); cdEl.textContent=''; return; }
+      const d = Math.floor(diff / 864e5);
+      const h = Math.floor((diff % 864e5) / 36e5);
+      const m = Math.floor((diff % 36e5) / 6e4);
+      const s = Math.floor((diff % 6e4) / 1e3);
+      cdEl.textContent = 'PORTAL OPENS IN  '
+        + (d ? d+'D  ' : '')
+        + String(h).padStart(2,'0') + 'H  '
+        + String(m).padStart(2,'0') + 'M  '
+        + String(s).padStart(2,'0') + 'S';
+    }
+    updateCD();
+    const cdTimer = setInterval(updateCD, 1000);
+
     pwBtn.addEventListener('click', checkPassword);
     pwInp.addEventListener('keydown', e=>{ if(e.key==='Enter') checkPassword(); });
   }
