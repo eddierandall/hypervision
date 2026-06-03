@@ -350,6 +350,7 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
   function setColors(bg){
     themeMeta.content = bg;
     document.documentElement.style.backgroundColor = bg;
+    document.body.style.backgroundColor = bg;
   }
   function setCookie(n,v,h){
     const e=new Date(Date.now()+h*36e5).toUTCString();
@@ -374,9 +375,11 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
 
   /* ── Full light → glitch → dark sequence ── */
   function showLightThenPortal(){
-    setColors('#88d5f7');
-    pLight.classList.remove('hidden');
-    setTimeout(glitchToPortal, 4000);
+    requestAnimationFrame(()=>{
+      setColors('#88d5f7');
+      pLight.classList.remove('hidden');
+      setTimeout(glitchToPortal, 4000);
+    });
   }
 
   /* ── Enter portal (post-password or returning cookie) ── */
@@ -397,9 +400,10 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
      password entirely: run the full light → glitch → dark flow.
      Otherwise fall through to the password gateway as normal.  */
   if(Date.now() >= GO_LIVE.getTime()){
-    /* Site is live — no password needed */
+    /* Site is live — clear any pre-launch cookie and run full sequence */
+    document.cookie = 'hv_auth=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/';
     pPW.classList.add('hidden');
-    showLightThenPortal();
+    setTimeout(showLightThenPortal, 50);
   } else {
     /* Pre-launch: show password gate (honour existing cookie) */
     if(getCookie('hv_auth')==='granted'){
