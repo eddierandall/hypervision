@@ -39,7 +39,6 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
 .page.hidden{display:none}
 
 /* ══ Z-INDEX STACK ══ */
-#page-pw   {z-index:5}
 #page-light{z-index:2}
 #page-dark {z-index:1}
 #page-ty   {z-index:3}
@@ -86,21 +85,6 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
   93% {clip-path:inset(0% 0 94% 0);transform:none}
   96% {clip-path:inset(90% 0 0% 0)}
   100%{clip-path:inset(100% 0 0% 0);opacity:0}
-}
-
-/* ══ PAGE -1 — PASSWORD GATE ══ */
-#page-pw{background:var(--dk-bg)}
-#page-pw::before{
-  content:'';position:absolute;inset:0;pointer-events:none;
-  background:
-    radial-gradient(ellipse 60% 50% at 72% 28%,rgba(15,50,100,.38) 0%,transparent 65%),
-    radial-gradient(ellipse 40% 50% at 18% 72%,rgba(8,35,70,.28) 0%,transparent 65%),
-    linear-gradient(180deg,#07090f 0%,#0a0f1e 50%,#07090f 100%);
-}
-#page-pw::after{
-  content:'';position:absolute;inset:0;opacity:.10;pointer-events:none;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Crect x='60' y='40' width='40' height='80' rx='8' fill='none' stroke='%238ec8f8' stroke-width='1'/%3E%3Crect x='40' y='60' width='80' height='40' rx='8' fill='none' stroke='%238ec8f8' stroke-width='1'/%3E%3C/svg%3E");
-  background-size:160px 160px;
 }
 
 /* ══ PAGE 0 — LIGHT ══ */
@@ -167,8 +151,6 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
 .dk-btn{width:100%;margin-top:10px;background:rgba(255,255,255,.055);border:1.5px solid rgba(200,230,255,.52);border-radius:50px;padding:13px 20px;color:var(--dk-txt);font-family:'Orbitron',sans-serif;font-size:clamp(.86rem,2.1vw,.98rem);font-weight:700;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;transition:background .2s,box-shadow .2s,transform .1s}
 .dk-btn:hover{background:rgba(120,185,255,.1);box-shadow:var(--dk-glow)}
 .dk-btn:active{transform:scale(.98)}
-.pw-error{font-family:'Share Tech Mono',monospace;font-size:.78rem;letter-spacing:.08em;color:rgba(255,100,100,.8);text-align:center;margin-top:12px;min-height:1.2em;text-transform:uppercase}
-.pw-countdown{font-family:'Share Tech Mono',monospace;font-size:.6rem;letter-spacing:.14em;color:rgba(120,170,220,.28);text-align:center;margin-top:8px;text-transform:uppercase;line-height:1.7}
 .dk-msg{font-family:'Share Tech Mono',monospace;font-size:.82rem;letter-spacing:.05em;line-height:1.55;text-align:center;margin-top:14px;min-height:1.2em;color:rgba(150,215,255,.9);text-shadow:var(--dk-glow-sm)}
 .dk-msg.err{color:rgba(255,120,120,.85);text-shadow:none}
 .dk-msg:empty{margin-top:0}
@@ -189,32 +171,6 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
 </head>
 <body>
 <div style="position:fixed;inset:0;bottom:-100px;background:#07090f;z-index:-1" aria-hidden="true"></div>
-
-<!-- PAGE -1: PASSWORD -->
-<div class="page" id="page-pw">
-  <div class="dk-sparks" aria-hidden="true">
-    <span class="dk-spark">✛</span><span class="dk-spark">✛</span>
-    <span class="dk-spark">✛</span><span class="dk-spark">✛</span>
-    <span class="dk-spark">✛</span><span class="dk-spark">✛</span>
-  </div>
-  <div class="dk-chrome" aria-hidden="true">
-    <div class="dk-cr"></div><div class="dk-cr"></div>
-    <div class="dk-cr"></div><div class="dk-cr"></div>
-  </div>
-  <div class="dk-content">
-    <div class="dk-form-card" style="text-align:center">
-      <h2 class="dk-form-heading">Enter Access Code</h2>
-      <div class="dk-field">
-        <input type="password" id="pw-input" autocomplete="off"
-               placeholder="••••••••" maxlength="32"
-               style="text-align:center;letter-spacing:.18em">
-      </div>
-      <button class="dk-btn" id="pw-btn" type="button">Enter</button>
-      <p class="pw-error" id="pw-error" aria-live="polite"></p>
-      <p class="pw-countdown" id="pw-countdown" aria-live="off"></p>
-    </div>
-  </div>
-</div>
 
 <!-- PAGE 0: LIGHT -->
 <div class="page hidden" id="page-light">
@@ -288,23 +244,10 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
 (function(){
   'use strict';
 
-  /* ══ SUPABASE CONFIG ══════════════════════════════════════════
-     Fill in the 3 values below from your Supabase project:
-       Settings → Data API   →  Project URL   (SB_URL)
-       Settings → API Keys   →  anon / public key   (SB_KEY)
-       The table records are written to            (SB_TABLE)
-     The anon key is safe to expose client-side AS LONG AS the
-     table has Row Level Security on with an insert-only policy
-     for the `anon` role (see the SQL in the chat message). */
+  /* ══ SUPABASE CONFIG ══════════════════════════════════════════ */
   const SB_URL   = 'https://zsjhbaepqoxlmtrsouel.supabase.co';
   const SB_KEY   = 'sb_publishable_Emb29E4NEPovRTFk4sAnFQ_InbDjayt';
   const SB_TABLE = 'patient_registrations';
-
-  /* ══ GO-LIVE DATE ═════════════════════════════════════════════
-     Site unlocks at 11:30 AM EST (UTC-5) on June 3, 2026.
-     EST = UTC-5  →  11:30 EST = 16:30 UTC
-     To adjust: change the ISO string below.                    */
-  const GO_LIVE = new Date('2026-06-03T16:30:00Z');
 
   /* ══ COUNTDOWN (disabled — may revisit) ══════════════════════
   // const countdownEl = document.getElementById('countdown');
@@ -336,14 +279,10 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
     if(!res.ok) throw new Error('Insert failed: ' + res.status);
   }
 
-  const pPW   = document.getElementById('page-pw');
   const pLight= document.getElementById('page-light');
   const pDark = document.getElementById('page-dark');
   const pTY   = document.getElementById('page-ty');
   const btn   = document.getElementById('btn-submit');
-  const pwBtn = document.getElementById('pw-btn');
-  const pwInp = document.getElementById('pw-input');
-  const pwErr = document.getElementById('pw-error');
   const themeMeta = document.querySelector('meta[name="theme-color"]');
 
   /* ── Helpers ── */
@@ -351,14 +290,6 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
     themeMeta.content = bg;
     document.documentElement.style.backgroundColor = bg;
     document.body.style.backgroundColor = bg;
-  }
-  function setCookie(n,v,h){
-    const e=new Date(Date.now()+h*36e5).toUTCString();
-    document.cookie=n+'='+v+';expires='+e+';path=/;SameSite=Strict';
-  }
-  function getCookie(n){
-    return document.cookie.split(';').map(c=>c.trim())
-      .find(c=>c.startsWith(n+'='))?.split('=')[1]||null;
   }
 
   /* ── Glitch: light → dark ── */
@@ -373,78 +304,12 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
     }, 1050);
   }
 
-  /* ── Full light → glitch → dark sequence ── */
-  function showLightThenPortal(){
-    requestAnimationFrame(()=>{
-      setColors('#88d5f7');
-      pLight.classList.remove('hidden');
-      setTimeout(glitchToPortal, 4000);
-    });
-  }
-
-  /* ── Enter portal (post-password or returning cookie) ── */
-  function enterPortal(firstTime){
-    pPW.classList.add('hidden');
-    if(firstTime){
-      showLightThenPortal();
-    } else {
-      /* Returning user: skip light page, go straight to dark */
-      pDark.classList.remove('hidden');
-      setColors('#07090f');
-      document.getElementById('fname').focus();
-    }
-  }
-
-  /* ══ GO-LIVE GATE ═════════════════════════════════════════════
-     If the current time is at or past GO_LIVE, bypass the
-     password entirely: run the full light → glitch → dark flow.
-     Otherwise fall through to the password gateway as normal.  */
-  if(Date.now() >= GO_LIVE.getTime()){
-    /* Site is live — clear any pre-launch cookie and run full sequence */
-    document.cookie = 'hv_auth=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/';
-    pPW.classList.add('hidden');
-    setTimeout(showLightThenPortal, 50);
-  } else {
-    /* Pre-launch: show password gate (honour existing cookie) */
-    if(getCookie('hv_auth')==='granted'){
-      enterPortal(false);
-    }
-
-    /* Password check */
-    function checkPassword(){
-      if(pwInp.value==='G0B!lls'){
-        setCookie('hv_auth','granted',24);
-        clearInterval(cdTimer);
-        enterPortal(true);
-      } else {
-        pwInp.classList.add('err');
-        pwErr.textContent='Access denied.';
-        pwInp.value='';
-        setTimeout(()=>{ pwInp.classList.remove('err'); pwErr.textContent=''; }, 1800);
-      }
-    }
-
-    /* Countdown display */
-    const cdEl = document.getElementById('pw-countdown');
-    function updateCD(){
-      const diff = GO_LIVE.getTime() - Date.now();
-      if(diff <= 0){ clearInterval(cdTimer); cdEl.textContent=''; return; }
-      const d = Math.floor(diff / 864e5);
-      const h = Math.floor((diff % 864e5) / 36e5);
-      const m = Math.floor((diff % 36e5) / 6e4);
-      const s = Math.floor((diff % 6e4) / 1e3);
-      cdEl.textContent = 'PORTAL OPENS IN  '
-        + (d ? d+'D  ' : '')
-        + String(h).padStart(2,'0') + 'H  '
-        + String(m).padStart(2,'0') + 'M  '
-        + String(s).padStart(2,'0') + 'S';
-    }
-    updateCD();
-    const cdTimer = setInterval(updateCD, 1000);
-
-    pwBtn.addEventListener('click', checkPassword);
-    pwInp.addEventListener('keydown', e=>{ if(e.key==='Enter') checkPassword(); });
-  }
+  /* ── Boot: light page → glitch → dark ── */
+  requestAnimationFrame(()=>{
+    setColors('#88d5f7');
+    pLight.classList.remove('hidden');
+    setTimeout(glitchToPortal, 4000);
+  });
 
   /* ══ FORM VALIDATION & SUBMIT ═════════════════════════════════ */
   function validate(){
