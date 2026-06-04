@@ -35,7 +35,7 @@ body{
 }
 
 /* ══ DEPTH / TEXTURE LAYERS (shared) ══ */
-.bg-depth{position:fixed;inset:0;z-index:-2;background:var(--dk-bg)}
+.bg-depth{position:fixed;inset:0;z-index:0;background:var(--dk-bg)}
 .bg-depth::before{
   content:'';position:absolute;inset:0;pointer-events:none;
   background:
@@ -48,7 +48,7 @@ body{
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Crect x='60' y='40' width='40' height='80' rx='8' fill='none' stroke='%238ec8f8' stroke-width='1'/%3E%3Crect x='40' y='60' width='80' height='40' rx='8' fill='none' stroke='%238ec8f8' stroke-width='1'/%3E%3Crect x='18' y='18' width='30' height='30' rx='6' fill='none' stroke='%238ec8f8' stroke-width='.6' opacity='.5'/%3E%3Crect x='112' y='102' width='28' height='28' rx='6' fill='none' stroke='%238ec8f8' stroke-width='.6' opacity='.5'/%3E%3C/svg%3E");
   background-size:160px 160px;
 }
-.sparks{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
+.sparks{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
 .spark{position:absolute;color:rgba(150,200,255,.30);font-weight:700;animation:drift linear infinite}
 .spark:nth-child(1){left:8%;top:38%;font-size:18px;animation-duration:18s;animation-delay:-3s}
 .spark:nth-child(2){left:55%;top:25%;font-size:14px;animation-duration:20s;animation-delay:-5s}
@@ -94,9 +94,15 @@ body{
 
 /* Stat strip */
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:clamp(16px,3vw,24px)}
-.stat{background:rgba(255,255,255,.028);border:1px solid var(--dk-border);border-radius:16px;padding:16px 18px;backdrop-filter:blur(10px)}
+.stat{background:rgba(255,255,255,.028);border:1px solid var(--dk-border);border-radius:16px;padding:16px 18px;backdrop-filter:blur(10px);text-align:center}
+.stat-date{font-family:'Share Tech Mono',monospace;font-size:.62rem;letter-spacing:.12em;color:rgba(200,225,255,.42);text-transform:uppercase;margin-top:5px}
+.stat-date:empty{margin-top:0}
 .stat-num{font-family:'Orbitron',sans-serif;font-size:clamp(1.5rem,5vw,2.2rem);font-weight:900;line-height:1;text-shadow:var(--dk-glow-sm)}
 .stat-label{font-family:'Share Tech Mono',monospace;font-size:.66rem;letter-spacing:.18em;color:var(--dk-txt-dim);text-transform:uppercase;margin-top:8px}
+.stat-delta-pct{font-family:'Share Tech Mono',monospace;font-size:.74rem;letter-spacing:.06em;margin-top:7px;color:var(--dk-txt-dim)}
+.stat-delta-pct:empty{margin-top:0}
+.stat-num.up,.stat-delta-pct.up{color:#7ce6aa;text-shadow:0 0 8px rgba(124,230,170,.4)}
+.stat-num.down,.stat-delta-pct.down{color:var(--dk-red);text-shadow:none}
 
 /* Toolbar */
 .toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
@@ -128,6 +134,23 @@ body{
 .foot{margin-top:18px;font-family:'Share Tech Mono',monospace;font-size:.66rem;letter-spacing:.14em;color:rgba(200,225,255,.35);text-transform:uppercase;text-align:center}
 .notice{font-family:'Share Tech Mono',monospace;font-size:.72rem;letter-spacing:.03em;line-height:1.6;color:var(--dk-red);margin:0 2px 14px}
 .notice:empty{display:none}
+
+/* segmented status filter */
+.seg{display:inline-flex;background:rgba(0,0,0,.45);border:1px solid var(--dk-border);border-radius:50px;padding:3px;gap:2px}
+.seg-btn{all:unset;cursor:pointer;font-family:'Rajdhani',sans-serif;font-weight:600;font-size:clamp(.74rem,1.8vw,.86rem);letter-spacing:.06em;color:var(--dk-txt-dim);padding:7px 14px;border-radius:50px;transition:color .2s,background .2s;white-space:nowrap}
+.seg-btn:hover{color:var(--dk-txt)}
+.seg-btn.active{color:var(--dk-txt);background:rgba(120,185,255,.16);box-shadow:var(--dk-glow-sm)}
+
+/* rows-per-page select */
+.rows-per{display:inline-flex;align-items:center;gap:8px;font-family:'Share Tech Mono',monospace;font-size:.64rem;letter-spacing:.16em;color:var(--dk-txt-dim);text-transform:uppercase}
+.dk-select{appearance:none;-webkit-appearance:none;background:rgba(0,0,0,.45);border:1px solid var(--dk-border);border-radius:50px;padding:10px 34px 10px 16px;color:var(--dk-txt);font-family:'Rajdhani',sans-serif;font-weight:600;font-size:.95rem;letter-spacing:.04em;cursor:pointer;outline:none;transition:border-color .2s,box-shadow .2s;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238ec8f8'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+.dk-select:focus{border-color:var(--dk-border-hi);box-shadow:0 0 0 2px rgba(130,190,255,.1),var(--dk-glow-sm)}
+.dk-select option{background:#0a0f1e;color:var(--dk-txt)}
+
+/* pager */
+.pager{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:18px;flex-wrap:wrap}
+.pg-info{font-family:'Share Tech Mono',monospace;font-size:.72rem;letter-spacing:.08em;color:var(--dk-txt-dim);text-transform:uppercase;text-align:center}
+.pg-btn{padding:9px 18px;font-size:.72rem;letter-spacing:.1em}
 
 /* ══ RESPONSIVE: collapse table to cards ══ */
 @media(max-width:640px){
@@ -177,12 +200,33 @@ body{
 
   <section class="stats">
     <div class="stat"><div class="stat-num" id="stat-total">—</div><div class="stat-label">Total Registered</div></div>
-    <div class="stat"><div class="stat-num" id="stat-today">—</div><div class="stat-label">New Today</div></div>
-    <div class="stat"><div class="stat-num" id="stat-shown">—</div><div class="stat-label">Showing</div></div>
+    <div class="stat">
+      <div class="stat-num" id="stat-today">—</div>
+      <div class="stat-label">New Today</div>
+      <div class="stat-date" id="stat-today-date"></div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" id="stat-delta">—</div>
+      <div class="stat-delta-pct" id="stat-delta-pct"></div>
+      <div class="stat-label">vs Yesterday</div>
+      <div class="stat-date" id="stat-yest-date"></div>
+    </div>
   </section>
 
   <div class="toolbar">
+    <div class="seg" id="filter-seg" role="group" aria-label="Subscription filter">
+      <button class="seg-btn active" data-filter="all" type="button">All</button>
+      <button class="seg-btn" data-filter="sub" type="button">Subscribed</button>
+      <button class="seg-btn" data-filter="unsub" type="button">Unsubscribed</button>
+    </div>
     <div class="search"><input class="dk-input" type="search" id="search" placeholder="Search name or email…" autocomplete="off"></div>
+    <label class="rows-per" for="page-size">Rows
+      <select class="dk-select" id="page-size">
+        <option value="25">25</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+      </select>
+    </label>
     <button class="dk-btn ghost" id="refresh-btn" type="button">Refresh</button>
     <button class="dk-btn ghost" id="export-btn" type="button">Export CSV</button>
   </div>
@@ -193,12 +237,18 @@ body{
     <div class="reg-head" id="reg-head">
       <button data-sort="name">Patient <span class="arrow"></span></button>
       <button data-sort="email">Email <span class="arrow"></span></button>
-      <button data-sort="date" class="active" style="justify-content:flex-end">Registered <span class="arrow">▼</span></button>
+      <button data-sort="date" class="active" style="justify-content:flex-end">Date Registered <span class="arrow">▼</span></button>
     </div>
     <div id="reg-body">
       <div class="state"><span class="spin"></span>Querying registry…</div>
     </div>
   </div>
+
+  <nav class="pager" id="pager" aria-label="Pagination">
+    <button class="dk-btn ghost pg-btn" id="prev-btn" type="button">‹ Prev</button>
+    <span class="pg-info" id="pg-info"></span>
+    <button class="dk-btn ghost pg-btn" id="next-btn" type="button">Next ›</button>
+  </nav>
 
   <p class="foot" id="foot"></p>
 </main>
@@ -236,13 +286,24 @@ body{
   const notice=document.getElementById('notice');
   const stTotal=document.getElementById('stat-total');
   const stToday=document.getElementById('stat-today');
-  const stShown=document.getElementById('stat-shown');
+  const stDelta=document.getElementById('stat-delta');
+  const stDeltaPct=document.getElementById('stat-delta-pct');
+  const stTodayDate=document.getElementById('stat-today-date');
+  const stYestDate=document.getElementById('stat-yest-date');
+  const pager=document.getElementById('pager');
+  const pgInfo=document.getElementById('pg-info');
+  const prevBtn=document.getElementById('prev-btn');
+  const nextBtn=document.getElementById('next-btn');
+  const pageSizeSel=document.getElementById('page-size');
 
   /* ══ STATE ══ */
   let records=[];          // raw rows from Supabase
   let dateKey=null;        // detected timestamp column
   let sortKey='date';      // 'name' | 'email' | 'date'
   let sortDir=-1;          // 1 asc, -1 desc
+  let pageSize=25;         // rows per page (25 | 50 | 100)
+  let page=1;              // current page (1-based)
+  let filter='all';        // 'all' | 'sub' | 'unsub'
 
   /* ══ AUTH ══ */
   function enter(){
@@ -293,13 +354,15 @@ body{
           +Object.keys(records[0]).join(', ')
           +'. Add a "created_at timestamptz default now()" column (and backfill it) to store dates.';
       } else notice.textContent='';
+      page=1;
       render();
     }catch(err){
       const msg = err.status===401||err.status===403
         ? 'Read access denied (401/403). The table needs a SELECT policy for the anon role.'
         : 'Could not reach the registry. '+(err.message||'');
       body.innerHTML='<div class="state err">'+escapeHtml(msg)+'</div>';
-      stTotal.textContent=stToday.textContent=stShown.textContent='—';
+      stTotal.textContent=stToday.textContent='—';
+      stDelta.textContent='—';stDelta.className='stat-num';stDeltaPct.textContent='';
       foot.textContent='';
     }
   }
@@ -324,10 +387,21 @@ body{
   /* ══ DERIVE / RENDER ══ */
   function fullName(r){ return ((r.first_name||'')+' '+(r.last_name||'')).trim()||'—'; }
   function tsOf(r){ return dateKey&&r[dateKey]?new Date(r[dateKey]).getTime():0; }
+  // True when a record is unsubscribed. Treats Y/yes/true/t/1 (any case) as unsubscribed;
+  // N/no/false/f/0/blank/missing count as subscribed.
+  function isUnsub(r){
+    const v=r.unsubscribed;
+    if(v===true) return true;
+    if(v===false||v==null||v==='') return false;
+    const s=String(v).trim().toLowerCase();
+    return s==='y'||s==='yes'||s==='true'||s==='t'||s==='1';
+  }
 
   function visibleRows(){
     const q=search.value.trim().toLowerCase();
     let rows=records.filter(r=>{
+      if(filter==='sub'   && isUnsub(r)) return false;
+      if(filter==='unsub' && !isUnsub(r)) return false;
       if(!q) return true;
       return (fullName(r)+' '+(r.email||'')).toLowerCase().includes(q);
     });
@@ -353,49 +427,102 @@ body{
     const rows=visibleRows();
     // stats
     stTotal.textContent=records.length;
-    stShown.textContent=rows.length;
+    const startToday=new Date();startToday.setHours(0,0,0,0);
+    const tT=startToday.getTime();
+    const tY=tT-864e5; // start of yesterday (local)
+    const fmtShort=d=>d.toLocaleDateString(undefined,{month:'short',day:'numeric'});
+    stTodayDate.textContent=fmtShort(startToday);
+    stYestDate.textContent=fmtShort(new Date(tY));
     if(dateKey){
-      const start=new Date();start.setHours(0,0,0,0);const s=start.getTime();
-      stToday.textContent=records.filter(r=>tsOf(r)>=s).length;
-    }else stToday.textContent='—';
+      let today=0,yest=0;
+      for(const r of records){
+        const ts=tsOf(r);
+        if(!ts) continue;
+        if(ts>=tT) today++;
+        else if(ts>=tY) yest++;
+      }
+      stToday.textContent=today;
+      // day-over-day change
+      const diff=today-yest;
+      stDelta.textContent=(diff>0?'+':'')+diff;
+      stDelta.className='stat-num '+(diff>0?'up':diff<0?'down':'');
+      if(yest===0){
+        stDeltaPct.textContent=today>0?'▲ new':'—';
+        stDeltaPct.className='stat-delta-pct '+(today>0?'up':'');
+      }else{
+        const pct=Math.round((diff/yest)*100);
+        stDeltaPct.textContent=(diff>0?'▲ ':diff<0?'▼ ':'■ ')+Math.abs(pct)+'%';
+        stDeltaPct.className='stat-delta-pct '+(diff>0?'up':diff<0?'down':'');
+      }
+    }else{
+      stToday.textContent='—';
+      stDelta.textContent='—';stDelta.className='stat-num';
+      stDeltaPct.textContent='';stDeltaPct.className='stat-delta-pct';
+    }
     // header arrows
     document.querySelectorAll('#reg-head button').forEach(b=>{
       const on=b.dataset.sort===sortKey;
       b.classList.toggle('active',on);
       b.querySelector('.arrow').textContent=on?(sortDir===-1?'▼':'▲'):'';
     });
+    // pagination
+    const total=rows.length;
+    const pages=Math.max(1,Math.ceil(total/pageSize));
+    if(page>pages) page=pages;
+    if(page<1) page=1;
+    const startIdx=(page-1)*pageSize;
+    const pageRows=rows.slice(startIdx,startIdx+pageSize);
     // body
-    if(!rows.length){
+    if(!total){
       body.innerHTML='<div class="state">'+(records.length?'No matches.':'No registrations yet.')+'</div>';
     }else{
-      body.innerHTML=rows.map(r=>
+      body.innerHTML=pageRows.map(r=>
         '<div class="reg-row">'+
           '<div class="rc rc-name" data-label="Patient">'+escapeHtml(fullName(r))+'</div>'+
           '<div class="rc rc-email" data-label="Email">'+escapeHtml(r.email||'—')+'</div>'+
-          '<div class="rc rc-date" data-label="Registered">'+escapeHtml(fmtDate(r))+'</div>'+
+          '<div class="rc rc-date" data-label="Date Registered">'+escapeHtml(fmtDate(r))+'</div>'+
         '</div>'
       ).join('');
     }
+    // pager UI
+    pager.style.display = total ? 'flex' : 'none';
+    pgInfo.textContent = (startIdx+1)+'–'+(startIdx+pageRows.length)+' of '+total+'  ·  Page '+page+'/'+pages;
+    prevBtn.disabled = page<=1;
+    nextBtn.disabled = page>=pages;
     foot.textContent='Last synced '+new Date().toLocaleTimeString();
   }
 
   /* ══ INTERACTIONS ══ */
   let t;
-  search.addEventListener('input',()=>{clearTimeout(t);t=setTimeout(render,120);});
+  search.addEventListener('input',()=>{clearTimeout(t);t=setTimeout(()=>{page=1;render();},120);});
 
   document.querySelectorAll('#reg-head button').forEach(b=>{
     b.addEventListener('click',()=>{
       const k=b.dataset.sort;
       if(sortKey===k) sortDir*=-1;
       else{ sortKey=k; sortDir=(k==='date')?-1:1; }
+      page=1;
+      render();
+    });
+  });
+
+  document.querySelectorAll('#filter-seg .seg-btn').forEach(b=>{
+    b.addEventListener('click',()=>{
+      filter=b.dataset.filter;
+      document.querySelectorAll('#filter-seg .seg-btn').forEach(x=>x.classList.toggle('active',x===b));
+      page=1;
       render();
     });
   });
 
   document.getElementById('refresh-btn').addEventListener('click',load);
 
+  pageSizeSel.addEventListener('change',e=>{ pageSize=+e.target.value||25; page=1; render(); });
+  prevBtn.addEventListener('click',()=>{ if(page>1){ page--; render(); } });
+  nextBtn.addEventListener('click',()=>{ page++; render(); });
+
   document.getElementById('export-btn').addEventListener('click',()=>{
-    const rows=visibleRows();
+    const rows=records.filter(r=>!isUnsub(r)); // all subscribed records
     if(!rows.length) return;
     const head=['First Name','Last Name','Email','Registered'];
     const body=rows.map(r=>[
@@ -406,7 +533,7 @@ body{
     const url=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
     const a=document.createElement('a');
     a.href=url;
-    a.download='hv_registry_'+new Date().toISOString().slice(0,10)+'.csv';
+    a.download='hv_subscribed_'+new Date().toISOString().slice(0,10)+'.csv';
     a.click();
     URL.revokeObjectURL(url);
   });
