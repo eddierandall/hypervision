@@ -111,7 +111,7 @@ body{
 
 /* Registry table */
 .panel{background:rgba(255,255,255,.022);border:1px solid var(--dk-border);border-radius:18px;backdrop-filter:blur(12px);box-shadow:0 0 40px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.05);overflow:hidden}
-.reg-head,.reg-row{display:grid;grid-template-columns:1.2fr 1.7fr .9fr;gap:14px;align-items:center;padding:14px clamp(14px,3vw,22px)}
+.reg-head,.reg-row{display:grid;grid-template-columns:1.2fr 1.6fr .8fr 1fr;gap:14px;align-items:center;padding:14px clamp(14px,3vw,22px)}
 .reg-head{border-bottom:1px solid var(--dk-border);background:rgba(120,185,255,.04)}
 .reg-head button{all:unset;cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:.68rem;letter-spacing:.16em;color:var(--dk-txt-dim);text-transform:uppercase;display:inline-flex;align-items:center;gap:6px}
 .reg-head button:hover{color:var(--dk-txt)}
@@ -124,6 +124,7 @@ body{
 .rc{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rc-name{font-weight:600;letter-spacing:.02em}
 .rc-email{font-family:'Share Tech Mono',monospace;font-size:.85rem;color:rgba(190,220,255,.8)}
+.rc-country{letter-spacing:.03em}
 .rc-date{font-family:'Share Tech Mono',monospace;font-size:.78rem;color:var(--dk-txt-dim);text-align:right}
 
 /* States */
@@ -146,6 +147,13 @@ body{
 .dk-select{appearance:none;-webkit-appearance:none;background:rgba(0,0,0,.45);border:1px solid var(--dk-border);border-radius:50px;padding:10px 34px 10px 16px;color:var(--dk-txt);font-family:'Rajdhani',sans-serif;font-weight:600;font-size:.95rem;letter-spacing:.04em;cursor:pointer;outline:none;transition:border-color .2s,box-shadow .2s;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238ec8f8'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
 .dk-select:focus{border-color:var(--dk-border-hi);box-shadow:0 0 0 2px rgba(130,190,255,.1),var(--dk-glow-sm)}
 .dk-select option{background:#0a0f1e;color:var(--dk-txt)}
+
+/* date-range filter */
+.daterange{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:16px}
+.dr-field{display:inline-flex;align-items:center;gap:8px;font-family:'Share Tech Mono',monospace;font-size:.64rem;letter-spacing:.16em;color:var(--dk-txt-dim);text-transform:uppercase}
+.dr-input{width:auto;padding:9px 14px;color-scheme:dark;cursor:pointer}
+.dr-input::-webkit-calendar-picker-indicator{filter:invert(.7) brightness(1.5);cursor:pointer;opacity:.8}
+.dr-input:disabled,.daterange button:disabled{opacity:.4;cursor:not-allowed}
 
 /* pager */
 .pager{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:18px;flex-wrap:wrap}
@@ -219,7 +227,7 @@ body{
       <button class="seg-btn" data-filter="sub" type="button">Subscribed</button>
       <button class="seg-btn" data-filter="unsub" type="button">Unsubscribed</button>
     </div>
-    <div class="search"><input class="dk-input" type="search" id="search" placeholder="Search name or email…" autocomplete="off"></div>
+    <div class="search"><input class="dk-input" type="search" id="search" placeholder="Search name, email or country…" autocomplete="off"></div>
     <label class="rows-per" for="page-size">Rows
       <select class="dk-select" id="page-size">
         <option value="25">25</option>
@@ -231,12 +239,19 @@ body{
     <button class="dk-btn ghost" id="export-btn" type="button">Export CSV</button>
   </div>
 
+  <div class="daterange" id="daterange">
+    <label class="dr-field" for="date-from">From <input class="dk-input dr-input" type="date" id="date-from"></label>
+    <label class="dr-field" for="date-to">To <input class="dk-input dr-input" type="date" id="date-to"></label>
+    <button class="dk-btn ghost pg-btn" id="date-clear" type="button">Clear</button>
+  </div>
+
   <p class="notice" id="notice"></p>
 
   <div class="panel">
     <div class="reg-head" id="reg-head">
       <button data-sort="name">Patient <span class="arrow"></span></button>
       <button data-sort="email">Email <span class="arrow"></span></button>
+      <button data-sort="country">Country <span class="arrow"></span></button>
       <button data-sort="date" class="active" style="justify-content:flex-end">Date Registered <span class="arrow">▼</span></button>
     </div>
     <div id="reg-body">
@@ -295,6 +310,9 @@ body{
   const prevBtn=document.getElementById('prev-btn');
   const nextBtn=document.getElementById('next-btn');
   const pageSizeSel=document.getElementById('page-size');
+  const dateFrom=document.getElementById('date-from');
+  const dateTo=document.getElementById('date-to');
+  const dateClear=document.getElementById('date-clear');
 
   /* ══ STATE ══ */
   let records=[];          // raw rows from Supabase
@@ -354,6 +372,9 @@ body{
           +Object.keys(records[0]).join(', ')
           +'. Add a "created_at timestamptz default now()" column (and backfill it) to store dates.';
       } else notice.textContent='';
+      // The date-range filter only works when a registration date exists.
+      [dateFrom,dateTo,dateClear].forEach(el=>el.disabled=!dateKey);
+      if(!dateKey){ dateFrom.value=''; dateTo.value=''; }
       page=1;
       render();
     }catch(err){
@@ -399,16 +420,25 @@ body{
 
   function visibleRows(){
     const q=search.value.trim().toLowerCase();
+    const fromTs=dateFrom.value?new Date(dateFrom.value+'T00:00:00').getTime():null;
+    const toTs  =dateTo.value  ?new Date(dateTo.value  +'T23:59:59.999').getTime():null;
     let rows=records.filter(r=>{
       if(filter==='sub'   && isUnsub(r)) return false;
       if(filter==='unsub' && !isUnsub(r)) return false;
-      if(!q) return true;
-      return (fullName(r)+' '+(r.email||'')).toLowerCase().includes(q);
+      if(fromTs!=null || toTs!=null){
+        const ts=tsOf(r);
+        if(!ts) return false;
+        if(fromTs!=null && ts<fromTs) return false;
+        if(toTs!=null && ts>toTs) return false;
+      }
+      if(q && !(fullName(r)+' '+(r.email||'')+' '+(r.country||'')).toLowerCase().includes(q)) return false;
+      return true;
     });
     rows.sort((a,b)=>{
       let av,bv;
       if(sortKey==='name'){av=fullName(a).toLowerCase();bv=fullName(b).toLowerCase();}
       else if(sortKey==='email'){av=(a.email||'').toLowerCase();bv=(b.email||'').toLowerCase();}
+      else if(sortKey==='country'){av=(a.country||'').toLowerCase();bv=(b.country||'').toLowerCase();}
       else{av=tsOf(a);bv=tsOf(b);}
       return av<bv?-1*sortDir:av>bv?1*sortDir:0;
     });
@@ -480,6 +510,7 @@ body{
         '<div class="reg-row">'+
           '<div class="rc rc-name" data-label="Patient">'+escapeHtml(fullName(r))+'</div>'+
           '<div class="rc rc-email" data-label="Email">'+escapeHtml(r.email||'—')+'</div>'+
+          '<div class="rc rc-country" data-label="Country">'+escapeHtml(r.country||'—')+'</div>'+
           '<div class="rc rc-date" data-label="Date Registered">'+escapeHtml(fmtDate(r))+'</div>'+
         '</div>'
       ).join('');
@@ -521,12 +552,16 @@ body{
   prevBtn.addEventListener('click',()=>{ if(page>1){ page--; render(); } });
   nextBtn.addEventListener('click',()=>{ page++; render(); });
 
+  dateFrom.addEventListener('change',()=>{ page=1; render(); });
+  dateTo.addEventListener('change',()=>{ page=1; render(); });
+  dateClear.addEventListener('click',()=>{ dateFrom.value=''; dateTo.value=''; page=1; render(); });
+
   document.getElementById('export-btn').addEventListener('click',()=>{
     const rows=records.filter(r=>!isUnsub(r)); // all subscribed records
     if(!rows.length) return;
-    const head=['First Name','Last Name','Email','Registered'];
+    const head=['First Name','Last Name','Email','Country','Registered'];
     const body=rows.map(r=>[
-      r.first_name||'', r.last_name||'', r.email||'',
+      r.first_name||'', r.last_name||'', r.email||'', r.country||'',
       dateKey&&r[dateKey]?new Date(r[dateKey]).toISOString():''
     ]);
     const csv=[head,...body].map(row=>row.map(csvCell).join(',')).join('\r\n');
