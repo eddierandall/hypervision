@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#07090f">
+<meta name="color-scheme" content="dark">
+<meta name="robots" content="noindex,nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>Hyper Vision · Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;600;700&family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+/* ══ VARIABLES (shared with portal) ══ */
+:root{
+  --dk-bg:#07090f;
+  --dk-border:rgba(180,210,255,.22);
+  --dk-border-hi:rgba(200,230,255,.5);
+  --dk-txt:#ddeeff;
+  --dk-txt-dim:rgba(200,225,255,.55);
+  --dk-glow:0 0 18px rgba(120,190,255,.55),0 0 40px rgba(80,160,255,.2);
+  --dk-glow-sm:0 0 8px rgba(120,190,255,.4);
+  --dk-red:rgba(255,110,110,.85);
+}
+
+/* ══ RESET ══ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#07090f;overscroll-behavior:none}
+body{
+  min-height:100vh;min-height:100dvh;
+  font-family:'Rajdhani',sans-serif;color:var(--dk-txt);
+  -webkit-tap-highlight-color:transparent;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ══ DEPTH / TEXTURE LAYERS (shared) ══ */
+.bg-depth{position:fixed;inset:0;z-index:-2;background:var(--dk-bg)}
+.bg-depth::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 60% 50% at 72% 28%,rgba(15,50,100,.38) 0%,transparent 65%),
+    radial-gradient(ellipse 40% 50% at 18% 72%,rgba(8,35,70,.28) 0%,transparent 65%),
+    linear-gradient(180deg,#07090f 0%,#0a0f1e 50%,#07090f 100%);
+}
+.bg-depth::after{
+  content:'';position:absolute;inset:0;opacity:.10;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Crect x='60' y='40' width='40' height='80' rx='8' fill='none' stroke='%238ec8f8' stroke-width='1'/%3E%3Crect x='40' y='60' width='80' height='40' rx='8' fill='none' stroke='%238ec8f8' stroke-width='1'/%3E%3Crect x='18' y='18' width='30' height='30' rx='6' fill='none' stroke='%238ec8f8' stroke-width='.6' opacity='.5'/%3E%3Crect x='112' y='102' width='28' height='28' rx='6' fill='none' stroke='%238ec8f8' stroke-width='.6' opacity='.5'/%3E%3C/svg%3E");
+  background-size:160px 160px;
+}
+.sparks{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
+.spark{position:absolute;color:rgba(150,200,255,.30);font-weight:700;animation:drift linear infinite}
+.spark:nth-child(1){left:8%;top:38%;font-size:18px;animation-duration:18s;animation-delay:-3s}
+.spark:nth-child(2){left:55%;top:25%;font-size:14px;animation-duration:20s;animation-delay:-5s}
+.spark:nth-child(3){left:80%;top:50%;font-size:12px;animation-duration:16s;animation-delay:-2s}
+.spark:nth-child(4){left:92%;top:20%;font-size:18px;animation-duration:24s;animation-delay:-7s}
+.spark:nth-child(5){left:15%;top:80%;font-size:10px;animation-duration:19s;animation-delay:-11s}
+.spark:nth-child(6){left:70%;top:85%;font-size:15px;animation-duration:21s;animation-delay:-4s}
+@keyframes drift{0%{transform:translateY(0);opacity:0}10%{opacity:.6}90%{opacity:.3}100%{transform:translateY(-38px);opacity:0}}
+
+/* ══ FORM PRIMITIVES (shared with portal) ══ */
+.dk-field{margin-bottom:16px}
+.dk-field label{display:block;font-size:.76rem;font-weight:600;letter-spacing:.07em;color:var(--dk-txt-dim);margin-bottom:4px;text-transform:uppercase}
+.dk-input{width:100%;background:rgba(0,0,0,.45);border:1px solid var(--dk-border);border-radius:50px;padding:10px 18px;color:var(--dk-txt);font-family:'Rajdhani',sans-serif;font-size:.98rem;letter-spacing:.04em;outline:none;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none}
+.dk-input:focus{border-color:var(--dk-border-hi);box-shadow:0 0 0 2px rgba(130,190,255,.1),var(--dk-glow-sm)}
+.dk-input.err{border-color:rgba(255,90,90,.7);box-shadow:0 0 8px rgba(255,60,60,.35);animation:shake .35s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.dk-btn{background:rgba(255,255,255,.055);border:1.5px solid rgba(200,230,255,.52);border-radius:50px;padding:11px 22px;color:var(--dk-txt);font-family:'Orbitron',sans-serif;font-size:clamp(.78rem,1.8vw,.9rem);font-weight:700;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:background .2s,box-shadow .2s,transform .1s;white-space:nowrap}
+.dk-btn:hover{background:rgba(120,185,255,.1);box-shadow:var(--dk-glow)}
+.dk-btn:active{transform:scale(.98)}
+.dk-btn:disabled{opacity:.5;cursor:default;box-shadow:none}
+.dk-btn.ghost{background:transparent;border-color:var(--dk-border)}
+
+/* ══ PASSWORD GATE ══ */
+#gate{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:32px 20px;padding-bottom:max(32px,env(safe-area-inset-bottom))}
+#gate.hidden{display:none}
+.gate-card{width:100%;max-width:420px;background:rgba(255,255,255,.028);border:1px solid var(--dk-border);border-radius:20px;padding:clamp(20px,5vw,36px) clamp(16px,5vw,32px);backdrop-filter:blur(14px);box-shadow:0 0 50px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.06);text-align:center}
+.gate-eyebrow{font-family:'Share Tech Mono',monospace;font-size:.7rem;letter-spacing:.28em;color:var(--dk-txt-dim);text-transform:uppercase;margin-bottom:6px}
+.gate-heading{font-family:'Orbitron',sans-serif;font-size:clamp(.95rem,2.6vw,1.2rem);font-weight:700;letter-spacing:.06em;margin-bottom:22px}
+.pw-error{font-family:'Share Tech Mono',monospace;font-size:.78rem;letter-spacing:.08em;color:var(--dk-red);text-align:center;margin-top:12px;min-height:1.2em;text-transform:uppercase}
+
+/* ══ DASHBOARD SHELL ══ */
+#app{display:none;position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:clamp(18px,4vw,40px) clamp(14px,4vw,32px) 64px;padding-bottom:max(64px,env(safe-area-inset-bottom))}
+#app.visible{display:block;animation:fadeUp .6s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+/* Top bar */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:clamp(18px,3vw,28px)}
+.brand{display:flex;align-items:center;gap:14px;min-width:0}
+.brand img{height:clamp(34px,6vw,52px);width:auto;filter:drop-shadow(var(--dk-glow-sm))}
+.brand-txt{display:flex;flex-direction:column;line-height:1.05;min-width:0}
+.brand-title{font-family:'Orbitron',sans-serif;font-weight:900;font-size:clamp(1rem,3vw,1.5rem);letter-spacing:.04em}
+.brand-sub{font-family:'Share Tech Mono',monospace;font-size:.66rem;letter-spacing:.26em;color:var(--dk-txt-dim);text-transform:uppercase;margin-top:4px}
+
+/* Stat strip */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:clamp(16px,3vw,24px)}
+.stat{background:rgba(255,255,255,.028);border:1px solid var(--dk-border);border-radius:16px;padding:16px 18px;backdrop-filter:blur(10px)}
+.stat-num{font-family:'Orbitron',sans-serif;font-size:clamp(1.5rem,5vw,2.2rem);font-weight:900;line-height:1;text-shadow:var(--dk-glow-sm)}
+.stat-label{font-family:'Share Tech Mono',monospace;font-size:.66rem;letter-spacing:.18em;color:var(--dk-txt-dim);text-transform:uppercase;margin-top:8px}
+
+/* Toolbar */
+.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.toolbar .search{flex:1 1 220px;min-width:0}
+.toolbar .search input{padding-top:11px;padding-bottom:11px}
+
+/* Registry table */
+.panel{background:rgba(255,255,255,.022);border:1px solid var(--dk-border);border-radius:18px;backdrop-filter:blur(12px);box-shadow:0 0 40px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.05);overflow:hidden}
+.reg-head,.reg-row{display:grid;grid-template-columns:1.2fr 1.7fr .9fr;gap:14px;align-items:center;padding:14px clamp(14px,3vw,22px)}
+.reg-head{border-bottom:1px solid var(--dk-border);background:rgba(120,185,255,.04)}
+.reg-head button{all:unset;cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:.68rem;letter-spacing:.16em;color:var(--dk-txt-dim);text-transform:uppercase;display:inline-flex;align-items:center;gap:6px}
+.reg-head button:hover{color:var(--dk-txt)}
+.reg-head button .arrow{opacity:0;font-size:.6rem}
+.reg-head button.active{color:var(--dk-txt)}
+.reg-head button.active .arrow{opacity:1}
+.reg-row{border-bottom:1px solid rgba(180,210,255,.08);transition:background .15s}
+.reg-row:last-child{border-bottom:none}
+.reg-row:hover{background:rgba(120,185,255,.05)}
+.rc{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rc-name{font-weight:600;letter-spacing:.02em}
+.rc-email{font-family:'Share Tech Mono',monospace;font-size:.85rem;color:rgba(190,220,255,.8)}
+.rc-date{font-family:'Share Tech Mono',monospace;font-size:.78rem;color:var(--dk-txt-dim);text-align:right}
+
+/* States */
+.state{padding:48px 24px;text-align:center;font-family:'Share Tech Mono',monospace;font-size:.85rem;letter-spacing:.06em;color:var(--dk-txt-dim);line-height:1.7}
+.state.err{color:var(--dk-red)}
+.spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(150,200,255,.25);border-top-color:rgba(150,200,255,.9);border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.foot{margin-top:18px;font-family:'Share Tech Mono',monospace;font-size:.66rem;letter-spacing:.14em;color:rgba(200,225,255,.35);text-transform:uppercase;text-align:center}
+.notice{font-family:'Share Tech Mono',monospace;font-size:.72rem;letter-spacing:.03em;line-height:1.6;color:var(--dk-red);margin:0 2px 14px}
+.notice:empty{display:none}
+
+/* ══ RESPONSIVE: collapse table to cards ══ */
+@media(max-width:640px){
+  .reg-head{display:none}
+  .reg-row{display:block;padding:14px 16px}
+  .rc{white-space:normal;display:flex;justify-content:space-between;gap:14px;padding:3px 0}
+  .rc::before{content:attr(data-label);font-family:'Share Tech Mono',monospace;font-size:.6rem;letter-spacing:.16em;color:var(--dk-txt-dim);text-transform:uppercase;flex:0 0 auto;padding-top:2px}
+  .rc-name{font-size:1.02rem}
+  .rc-date{text-align:right}
+}
+</style>
+</head>
+<body>
+<div class="bg-depth" aria-hidden="true"></div>
+<div class="sparks" aria-hidden="true">
+  <span class="spark">✛</span><span class="spark">✛</span><span class="spark">✛</span>
+  <span class="spark">✛</span><span class="spark">✛</span><span class="spark">✛</span>
+</div>
+
+<!-- PASSWORD GATE -->
+<div id="gate">
+  <div class="gate-card">
+    <p class="gate-eyebrow">Hyper Vision</p>
+    <h1 class="gate-heading">Admin Access</h1>
+    <div class="dk-field">
+      <input class="dk-input" type="password" id="pw-input" autocomplete="off"
+             placeholder="••••••••" maxlength="32"
+             style="text-align:center;letter-spacing:.18em">
+    </div>
+    <button class="dk-btn" id="pw-btn" type="button" style="width:100%;margin-top:6px">Enter</button>
+    <p class="pw-error" id="pw-error" aria-live="polite"></p>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<main id="app" aria-hidden="true">
+  <header class="topbar">
+    <div class="brand">
+      <img src="../images/asset03.png" alt="" onerror="this.style.display='none'">
+      <div class="brand-txt">
+        <span class="brand-title">REGISTRY</span>
+        <span class="brand-sub">Patient Enrollment · Admin</span>
+      </div>
+    </div>
+    <button class="dk-btn ghost" id="logout-btn" type="button">Log Out</button>
+  </header>
+
+  <section class="stats">
+    <div class="stat"><div class="stat-num" id="stat-total">—</div><div class="stat-label">Total Registered</div></div>
+    <div class="stat"><div class="stat-num" id="stat-today">—</div><div class="stat-label">New Today</div></div>
+    <div class="stat"><div class="stat-num" id="stat-shown">—</div><div class="stat-label">Showing</div></div>
+  </section>
+
+  <div class="toolbar">
+    <div class="search"><input class="dk-input" type="search" id="search" placeholder="Search name or email…" autocomplete="off"></div>
+    <button class="dk-btn ghost" id="refresh-btn" type="button">Refresh</button>
+    <button class="dk-btn ghost" id="export-btn" type="button">Export CSV</button>
+  </div>
+
+  <p class="notice" id="notice"></p>
+
+  <div class="panel">
+    <div class="reg-head" id="reg-head">
+      <button data-sort="name">Patient <span class="arrow"></span></button>
+      <button data-sort="email">Email <span class="arrow"></span></button>
+      <button data-sort="date" class="active" style="justify-content:flex-end">Registered <span class="arrow">▼</span></button>
+    </div>
+    <div id="reg-body">
+      <div class="state"><span class="spin"></span>Querying registry…</div>
+    </div>
+  </div>
+
+  <p class="foot" id="foot"></p>
+</main>
+
+<script>
+(function(){
+  'use strict';
+
+  /* ══ CONFIG (identical creds to the portal) ══ */
+  const SB_URL   = 'https://zsjhbaepqoxlmtrsouel.supabase.co';
+  const SB_KEY   = 'sb_publishable_Emb29E4NEPovRTFk4sAnFQ_InbDjayt';
+  const SB_TABLE = 'patient_registrations';
+  const PASSWORD = 'G0B!lls';
+
+  /* ══ COOKIE HELPERS (same scheme as portal: path=/ so auth is shared) ══ */
+  function setCookie(n,v,h){
+    const e=new Date(Date.now()+h*36e5).toUTCString();
+    document.cookie=n+'='+v+';expires='+e+';path=/;SameSite=Strict';
+  }
+  function getCookie(n){
+    return document.cookie.split(';').map(c=>c.trim())
+      .find(c=>c.startsWith(n+'='))?.split('=')[1]||null;
+  }
+  function clearCookie(n){ document.cookie=n+'=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;SameSite=Strict'; }
+
+  /* ══ ELEMENTS ══ */
+  const gate=document.getElementById('gate');
+  const app=document.getElementById('app');
+  const pwInp=document.getElementById('pw-input');
+  const pwBtn=document.getElementById('pw-btn');
+  const pwErr=document.getElementById('pw-error');
+  const body=document.getElementById('reg-body');
+  const search=document.getElementById('search');
+  const foot=document.getElementById('foot');
+  const notice=document.getElementById('notice');
+  const stTotal=document.getElementById('stat-total');
+  const stToday=document.getElementById('stat-today');
+  const stShown=document.getElementById('stat-shown');
+
+  /* ══ STATE ══ */
+  let records=[];          // raw rows from Supabase
+  let dateKey=null;        // detected timestamp column
+  let sortKey='date';      // 'name' | 'email' | 'date'
+  let sortDir=-1;          // 1 asc, -1 desc
+
+  /* ══ AUTH ══ */
+  function enter(){
+    gate.classList.add('hidden');
+    app.classList.add('visible');
+    app.setAttribute('aria-hidden','false');
+    load();
+  }
+  function checkPassword(){
+    if(pwInp.value===PASSWORD){
+      setCookie('hv_auth','granted',4);
+      enter();
+    }else{
+      pwInp.classList.add('err');
+      pwErr.textContent='Access denied.';
+      pwInp.value='';
+      setTimeout(()=>{pwInp.classList.remove('err');pwErr.textContent='';},1800);
+    }
+  }
+  pwBtn.addEventListener('click',checkPassword);
+  pwInp.addEventListener('keydown',e=>{if(e.key==='Enter')checkPassword();});
+
+  document.getElementById('logout-btn').addEventListener('click',()=>{
+    clearCookie('hv_auth');
+    location.reload();
+  });
+
+  /* ══ DATA ══ */
+  async function fetchRows(query){
+    const res=await fetch(SB_URL+'/rest/v1/'+SB_TABLE+'?'+query,{
+      headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}
+    });
+    if(!res.ok){const t=await res.text();const e=new Error(t||res.status);e.status=res.status;throw e;}
+    return res.json();
+  }
+
+  async function load(){
+    body.innerHTML='<div class="state"><span class="spin"></span>Querying registry…</div>';
+    try{
+      let rows;
+      // Prefer newest-first if the table has a created_at column; fall back gracefully.
+      try{ rows=await fetchRows('select=*&order=created_at.desc'); }
+      catch(_){ rows=await fetchRows('select=*'); }
+      records=Array.isArray(rows)?rows:[];
+      dateKey=detectDateKey(records);
+      if(records.length && !dateKey){
+        notice.textContent='No registration-date column detected in the returned data. Columns: '
+          +Object.keys(records[0]).join(', ')
+          +'. Add a "created_at timestamptz default now()" column (and backfill it) to store dates.';
+      } else notice.textContent='';
+      render();
+    }catch(err){
+      const msg = err.status===401||err.status===403
+        ? 'Read access denied (401/403). The table needs a SELECT policy for the anon role.'
+        : 'Could not reach the registry. '+(err.message||'');
+      body.innerHTML='<div class="state err">'+escapeHtml(msg)+'</div>';
+      stTotal.textContent=stToday.textContent=stShown.textContent='—';
+      foot.textContent='';
+    }
+  }
+
+  // Find the timestamp column by inspecting actual values, not just guessing names.
+  function detectDateKey(rows){
+    if(!rows||!rows.length) return null;
+    const sample=rows.slice(0,25);
+    const keys=Object.keys(rows[0]||{});
+    const isTs=v=>typeof v==='string'
+      &&/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/.test(v)
+      &&!isNaN(new Date(v));
+    // Prefer conventional names that actually hold timestamps.
+    for(const k of ['created_at','inserted_at','registered_at','created','timestamp','date']){
+      if(keys.includes(k)&&sample.some(r=>isTs(r[k]))) return k;
+    }
+    // Otherwise take any column whose values look like timestamps.
+    for(const k of keys){ if(sample.some(r=>isTs(r[k]))) return k; }
+    return null;
+  }
+
+  /* ══ DERIVE / RENDER ══ */
+  function fullName(r){ return ((r.first_name||'')+' '+(r.last_name||'')).trim()||'—'; }
+  function tsOf(r){ return dateKey&&r[dateKey]?new Date(r[dateKey]).getTime():0; }
+
+  function visibleRows(){
+    const q=search.value.trim().toLowerCase();
+    let rows=records.filter(r=>{
+      if(!q) return true;
+      return (fullName(r)+' '+(r.email||'')).toLowerCase().includes(q);
+    });
+    rows.sort((a,b)=>{
+      let av,bv;
+      if(sortKey==='name'){av=fullName(a).toLowerCase();bv=fullName(b).toLowerCase();}
+      else if(sortKey==='email'){av=(a.email||'').toLowerCase();bv=(b.email||'').toLowerCase();}
+      else{av=tsOf(a);bv=tsOf(b);}
+      return av<bv?-1*sortDir:av>bv?1*sortDir:0;
+    });
+    return rows;
+  }
+
+  function fmtDate(r){
+    if(!dateKey||!r[dateKey]) return '—';
+    const d=new Date(r[dateKey]);
+    if(isNaN(d)) return '—';
+    return d.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'})+
+      ' · '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
+  }
+
+  function render(){
+    const rows=visibleRows();
+    // stats
+    stTotal.textContent=records.length;
+    stShown.textContent=rows.length;
+    if(dateKey){
+      const start=new Date();start.setHours(0,0,0,0);const s=start.getTime();
+      stToday.textContent=records.filter(r=>tsOf(r)>=s).length;
+    }else stToday.textContent='—';
+    // header arrows
+    document.querySelectorAll('#reg-head button').forEach(b=>{
+      const on=b.dataset.sort===sortKey;
+      b.classList.toggle('active',on);
+      b.querySelector('.arrow').textContent=on?(sortDir===-1?'▼':'▲'):'';
+    });
+    // body
+    if(!rows.length){
+      body.innerHTML='<div class="state">'+(records.length?'No matches.':'No registrations yet.')+'</div>';
+    }else{
+      body.innerHTML=rows.map(r=>
+        '<div class="reg-row">'+
+          '<div class="rc rc-name" data-label="Patient">'+escapeHtml(fullName(r))+'</div>'+
+          '<div class="rc rc-email" data-label="Email">'+escapeHtml(r.email||'—')+'</div>'+
+          '<div class="rc rc-date" data-label="Registered">'+escapeHtml(fmtDate(r))+'</div>'+
+        '</div>'
+      ).join('');
+    }
+    foot.textContent='Last synced '+new Date().toLocaleTimeString();
+  }
+
+  /* ══ INTERACTIONS ══ */
+  let t;
+  search.addEventListener('input',()=>{clearTimeout(t);t=setTimeout(render,120);});
+
+  document.querySelectorAll('#reg-head button').forEach(b=>{
+    b.addEventListener('click',()=>{
+      const k=b.dataset.sort;
+      if(sortKey===k) sortDir*=-1;
+      else{ sortKey=k; sortDir=(k==='date')?-1:1; }
+      render();
+    });
+  });
+
+  document.getElementById('refresh-btn').addEventListener('click',load);
+
+  document.getElementById('export-btn').addEventListener('click',()=>{
+    const rows=visibleRows();
+    if(!rows.length) return;
+    const head=['First Name','Last Name','Email','Registered'];
+    const body=rows.map(r=>[
+      r.first_name||'', r.last_name||'', r.email||'',
+      dateKey&&r[dateKey]?new Date(r[dateKey]).toISOString():''
+    ]);
+    const csv=[head,...body].map(row=>row.map(csvCell).join(',')).join('\r\n');
+    const url=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
+    const a=document.createElement('a');
+    a.href=url;
+    a.download='hv_registry_'+new Date().toISOString().slice(0,10)+'.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  /* ══ UTILS ══ */
+  function csvCell(v){v=String(v);return /[",\r\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
+  function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+  /* ══ BOOT ══ */
+  if(getCookie('hv_auth')==='granted') enter();
+  else pwInp.focus();
+})();
+</script>
+</body>
+</html>
