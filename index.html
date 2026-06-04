@@ -249,6 +249,24 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
   const SB_KEY   = 'sb_publishable_Emb29E4NEPovRTFk4sAnFQ_InbDjayt';
   const SB_TABLE = 'patient_registrations';
 
+  /* ══ VISITOR COUNTRY (via Cloudflare edge) ════════════════════
+     Reads the ISO country code from Cloudflare's /cdn-cgi/trace.
+     Works when served through Cloudflare (e.g. Cloudflare Pages);
+     returns null anywhere else, or on timeout/failure, so it never
+     blocks a registration. Fired once on load and cached. */
+  async function getCountry(){
+    try{
+      const ctrl=new AbortController();
+      const t=setTimeout(()=>ctrl.abort(),1200);
+      const r=await fetch('/cdn-cgi/trace',{signal:ctrl.signal});
+      clearTimeout(t);
+      if(!r.ok) return null;
+      const m=(await r.text()).match(/^loc=([A-Z]{2})$/m);
+      return m ? m[1] : null;
+    }catch{ return null; }
+  }
+  const countryPromise = getCountry();
+
   /* ══ COUNTDOWN (disabled — may revisit) ══════════════════════
   // const countdownEl = document.getElementById('countdown');
   // function updateCountdown(){
@@ -341,7 +359,8 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
       await saveToSupabase({
         first_name:document.getElementById('fname').value.trim(),
         last_name :document.getElementById('lname').value.trim(),
-        email     :document.getElementById('email').value.trim().toLowerCase()
+        email     :document.getElementById('email').value.trim().toLowerCase(),
+        country   :await countryPromise
       });
       pDark.classList.add('hidden');
       pTY.classList.remove('hidden');
