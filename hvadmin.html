@@ -78,6 +78,7 @@ body{
 .gate-eyebrow{font-family:'Share Tech Mono',monospace;font-size:.7rem;letter-spacing:.28em;color:var(--dk-txt-dim);text-transform:uppercase;margin-bottom:6px}
 .gate-heading{font-family:'Orbitron',sans-serif;font-size:clamp(.95rem,2.6vw,1.2rem);font-weight:700;letter-spacing:.06em;margin-bottom:22px}
 .pw-error{font-family:'Share Tech Mono',monospace;font-size:.78rem;letter-spacing:.08em;color:var(--dk-red);text-align:center;margin-top:12px;min-height:1.2em;text-transform:uppercase}
+.gate-note{font-family:'Share Tech Mono',monospace;font-size:.72rem;letter-spacing:.03em;line-height:1.6;color:var(--dk-txt-dim);margin:-10px 0 18px;text-align:center}
 
 /* ══ DASHBOARD SHELL ══ */
 #app{display:none;position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:clamp(18px,4vw,40px) clamp(14px,4vw,32px) 64px;padding-bottom:max(64px,env(safe-area-inset-bottom))}
@@ -169,6 +170,41 @@ body{
   .rc-name{font-size:1.02rem}
   .rc-date{text-align:right}
 }
+
+/* ══ VIEW SWITCHER ══ */
+.nav-seg{display:inline-flex;gap:2px;background:rgba(0,0,0,.45);border:1px solid var(--dk-border);border-radius:50px;padding:3px}
+.nav-seg button{all:unset;cursor:pointer;font-family:'Rajdhani',sans-serif;font-weight:600;font-size:clamp(.78rem,1.8vw,.9rem);letter-spacing:.06em;color:var(--dk-txt-dim);padding:7px 16px;border-radius:50px;transition:color .2s,background .2s;white-space:nowrap}
+.nav-seg button:hover{color:var(--dk-txt)}
+.nav-seg button.active{color:var(--dk-txt);background:rgba(120,185,255,.16);box-shadow:var(--dk-glow-sm)}
+
+/* ══ ADMIN USERS VIEW ══ */
+.admins-h{font-family:'Orbitron',sans-serif;font-size:clamp(.85rem,2.2vw,1rem);font-weight:700;letter-spacing:.04em;margin-bottom:16px}
+.addgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0 14px}
+.adm-check{display:inline-flex;align-items:center;gap:9px;font-size:.95rem;color:var(--dk-txt-dim);margin:2px 0 16px;cursor:pointer}
+.adm-check input{width:17px;height:17px;accent-color:#5ab8f0;cursor:pointer}
+.adm-flash{font-family:'Share Tech Mono',monospace;font-size:.74rem;letter-spacing:.02em;line-height:1.6;color:var(--dk-txt);margin:0 2px 14px;word-break:break-word}
+.adm-flash:empty{display:none}
+.adm-head,.adm-row{display:grid;grid-template-columns:1.2fr 1fr 1.6fr .7fr .7fr 1.4fr;gap:12px;align-items:center;padding:13px clamp(14px,3vw,22px)}
+.adm-head{border-bottom:1px solid var(--dk-border);background:rgba(120,185,255,.04);font-family:'Share Tech Mono',monospace;font-size:.66rem;letter-spacing:.14em;color:var(--dk-txt-dim);text-transform:uppercase}
+.adm-row{border-bottom:1px solid rgba(180,210,255,.08);transition:background .15s}
+.adm-row:last-child{border-bottom:none}
+.adm-row:hover{background:rgba(120,185,255,.05)}
+.adm-row .c{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.adm-row .rc-email{font-family:'Share Tech Mono',monospace;font-size:.85rem;color:rgba(190,220,255,.8)}
+.badge{display:inline-block;font-family:'Share Tech Mono',monospace;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;padding:3px 10px;border-radius:50px;border:1px solid var(--dk-border);color:var(--dk-txt-dim)}
+.badge.admin,.badge.on{color:#7ce6aa;border-color:rgba(124,230,170,.4)}
+.badge.off{color:var(--dk-red);border-color:rgba(255,110,110,.4)}
+.row-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.mini-btn{all:unset;cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;padding:6px 11px;border:1px solid var(--dk-border);border-radius:50px;color:var(--dk-txt-dim);transition:color .15s,border-color .15s}
+.mini-btn:hover{color:var(--dk-txt);border-color:var(--dk-border-hi)}
+.mini-btn:disabled{opacity:.4;cursor:default}
+@media(max-width:680px){
+  .adm-head{display:none}
+  .adm-row{display:block;padding:14px 16px}
+  .adm-row .c{white-space:normal;display:flex;justify-content:space-between;gap:12px;padding:3px 0}
+  .adm-row .c::before{content:attr(data-label);font-family:'Share Tech Mono',monospace;font-size:.6rem;letter-spacing:.14em;color:var(--dk-txt-dim);text-transform:uppercase;flex:0 0 auto}
+  .row-actions{justify-content:flex-start;margin-top:10px}
+}
 </style>
 </head>
 <body>
@@ -178,19 +214,43 @@ body{
   <span class="spark">✛</span><span class="spark">✛</span><span class="spark">✛</span>
 </div>
 
-<!-- PASSWORD GATE -->
+<!-- LOGIN GATE -->
 <div id="gate">
-  <div class="gate-card">
+
+  <!-- LOGIN VIEW -->
+  <div class="gate-card" id="login-view">
     <p class="gate-eyebrow">Hyper Vision</p>
     <h1 class="gate-heading">Admin Access</h1>
-    <div class="dk-field">
-      <input class="dk-input" type="password" id="pw-input" autocomplete="off"
-             placeholder="••••••••" maxlength="32"
-             style="text-align:center;letter-spacing:.18em">
+    <div class="dk-field" style="text-align:left">
+      <label for="login-user">Username</label>
+      <input class="dk-input" type="text" id="login-user" autocomplete="username"
+             autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="64">
     </div>
-    <button class="dk-btn" id="pw-btn" type="button" style="width:100%;margin-top:6px">Enter</button>
-    <p class="pw-error" id="pw-error" aria-live="polite"></p>
+    <div class="dk-field" style="text-align:left">
+      <label for="login-pass">Password</label>
+      <input class="dk-input" type="password" id="login-pass" autocomplete="current-password" maxlength="128">
+    </div>
+    <button class="dk-btn" id="login-btn" type="button" style="width:100%;margin-top:6px">Enter</button>
+    <p class="pw-error" id="login-error" aria-live="polite"></p>
   </div>
+
+  <!-- FIRST-LOGIN: SET NEW PASSWORD VIEW -->
+  <div class="gate-card" id="newpw-view" style="display:none">
+    <p class="gate-eyebrow">Hyper Vision</p>
+    <h1 class="gate-heading">Set a New Password</h1>
+    <p class="gate-note">Your temporary password must be changed before you can continue. Use at least 8 characters.</p>
+    <div class="dk-field" style="text-align:left">
+      <label for="newpw-1">New Password</label>
+      <input class="dk-input" type="password" id="newpw-1" autocomplete="new-password" maxlength="128">
+    </div>
+    <div class="dk-field" style="text-align:left">
+      <label for="newpw-2">Confirm New Password</label>
+      <input class="dk-input" type="password" id="newpw-2" autocomplete="new-password" maxlength="128">
+    </div>
+    <button class="dk-btn" id="newpw-btn" type="button" style="width:100%;margin-top:6px">Save &amp; Continue</button>
+    <p class="pw-error" id="newpw-error" aria-live="polite"></p>
+  </div>
+
 </div>
 
 <!-- DASHBOARD -->
@@ -203,8 +263,14 @@ body{
         <span class="brand-sub">Patient Enrollment · Admin</span>
       </div>
     </div>
+    <nav class="nav-seg" id="view-nav" style="display:none">
+      <button data-view="registry" class="active" type="button">Registry</button>
+      <button data-view="admins" type="button">Admin Users</button>
+    </nav>
     <button class="dk-btn ghost" id="logout-btn" type="button">Log Out</button>
   </header>
+
+  <div id="registry-view">
 
   <section class="stats">
     <div class="stat"><div class="stat-num" id="stat-total">—</div><div class="stat-label">Total Registered</div></div>
@@ -266,6 +332,32 @@ body{
   </nav>
 
   <p class="foot" id="foot"></p>
+  </div><!-- /registry-view -->
+
+  <!-- ADMIN USERS MANAGEMENT (admins only) -->
+  <section id="admins-view" style="display:none">
+    <div class="panel" style="padding:clamp(16px,4vw,26px);margin-bottom:18px">
+      <h2 class="admins-h">Add Admin User</h2>
+      <div class="addgrid">
+        <div class="dk-field"><label for="na-first">First Name</label><input class="dk-input" id="na-first" autocomplete="off"></div>
+        <div class="dk-field"><label for="na-last">Last Name</label><input class="dk-input" id="na-last" autocomplete="off"></div>
+        <div class="dk-field"><label for="na-email">Email</label><input class="dk-input" id="na-email" type="email" autocomplete="off"></div>
+        <div class="dk-field"><label for="na-user">Username</label><input class="dk-input" id="na-user" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off"></div>
+      </div>
+      <label class="adm-check"><input type="checkbox" id="na-admin"> Grant admin rights (can manage users)</label>
+      <button class="dk-btn" id="na-btn" type="button">Create User</button>
+      <p class="adm-flash" id="na-msg" aria-live="polite"></p>
+    </div>
+
+    <p class="adm-flash" id="adm-flash" aria-live="polite"></p>
+
+    <div class="panel">
+      <div class="adm-head">
+        <span>Name</span><span>Username</span><span>Email</span><span>Role</span><span>Status</span><span style="text-align:right">Actions</span>
+      </div>
+      <div id="adm-body"><div class="state"><span class="spin"></span>Loading admin users…</div></div>
+    </div>
+  </section>
 </main>
 
 <script>
@@ -276,7 +368,19 @@ body{
   const SB_URL   = 'https://zsjhbaepqoxlmtrsouel.supabase.co';
   const SB_KEY   = 'sb_publishable_Emb29E4NEPovRTFk4sAnFQ_InbDjayt';
   const SB_TABLE = 'patient_registrations';
-  const PASSWORD = 'G0B!lls';
+
+  /* Call a Postgres RPC. Admin auth lives behind SECURITY DEFINER
+     functions so the admin_users table is never exposed to the
+     publishable key — only success/failure + minimal fields come back. */
+  async function rpc(fn,params){
+    const res=await fetch(SB_URL+'/rest/v1/rpc/'+fn,{
+      method:'POST',
+      headers:{'Content-Type':'application/json',apikey:SB_KEY,Authorization:'Bearer '+SB_KEY},
+      body:JSON.stringify(params)
+    });
+    if(!res.ok){const t=await res.text();const e=new Error(t||res.status);e.status=res.status;throw e;}
+    return res.json();
+  }
 
   /* ══ COOKIE HELPERS (same scheme as portal: path=/ so auth is shared) ══ */
   function setCookie(n,v,h){
@@ -292,9 +396,16 @@ body{
   /* ══ ELEMENTS ══ */
   const gate=document.getElementById('gate');
   const app=document.getElementById('app');
-  const pwInp=document.getElementById('pw-input');
-  const pwBtn=document.getElementById('pw-btn');
-  const pwErr=document.getElementById('pw-error');
+  const loginView=document.getElementById('login-view');
+  const newpwView=document.getElementById('newpw-view');
+  const loginUser=document.getElementById('login-user');
+  const loginPass=document.getElementById('login-pass');
+  const loginBtn=document.getElementById('login-btn');
+  const loginErr=document.getElementById('login-error');
+  const newpw1=document.getElementById('newpw-1');
+  const newpw2=document.getElementById('newpw-2');
+  const newpwBtn=document.getElementById('newpw-btn');
+  const newpwErr=document.getElementById('newpw-error');
   const body=document.getElementById('reg-body');
   const search=document.getElementById('search');
   const foot=document.getElementById('foot');
@@ -323,29 +434,97 @@ body{
   let page=1;              // current page (1-based)
   let filter='all';        // 'all' | 'sub' | 'unsub'
 
+  let SESSION=null;        // server session token (admin auth)
+  let IS_ADMIN=false;      // whether the logged-in user can manage admins
+
   /* ══ AUTH ══ */
+  let pendingAcct=null;   // account awaiting first-login password change
+  let pendingTemp=null;   // the temporary password just used
+
   function enter(){
     gate.classList.add('hidden');
     app.classList.add('visible');
     app.setAttribute('aria-hidden','false');
+    setupViews();
     load();
   }
-  function checkPassword(){
-    if(pwInp.value===PASSWORD){
-      setCookie('hv_auth','granted',4);
-      enter();
-    }else{
-      pwInp.classList.add('err');
-      pwErr.textContent='Access denied.';
-      pwInp.value='';
-      setTimeout(()=>{pwInp.classList.remove('err');pwErr.textContent='';},1800);
+
+  function grantAccess(acct){
+    if(acct&&acct.token) SESSION=acct.token;
+    IS_ADMIN=!!(acct&&acct.is_admin);
+    setCookie('hv_auth','granted',4);
+    if(SESSION) setCookie('hv_tok',SESSION,4);
+    setCookie('hv_role',IS_ADMIN?'1':'0',4);
+    if(acct&&acct.first_name) setCookie('hv_admin',encodeURIComponent(acct.first_name),4);
+    pendingAcct=pendingTemp=null;
+    enter();
+  }
+
+  function flashLoginErr(msg){
+    loginPass.value='';
+    loginUser.classList.add('err');loginPass.classList.add('err');
+    loginErr.textContent=msg;
+    setTimeout(()=>{loginUser.classList.remove('err');loginPass.classList.remove('err');loginErr.textContent='';},2200);
+  }
+
+  /* Verify username/password against admin_users via the admin_login RPC. */
+  async function doLogin(){
+    const u=loginUser.value.trim();
+    const p=loginPass.value;
+    if(!u||!p){ flashLoginErr('Enter username and password.'); return; }
+    loginBtn.disabled=true; const orig=loginBtn.textContent; loginBtn.textContent='Checking…';
+    try{
+      const rows=await rpc('admin_login',{p_username:u,p_password:p});
+      const acct=Array.isArray(rows)?rows[0]:rows;
+      if(!acct){ flashLoginErr('Invalid credentials.'); return; }
+      if(acct.must_change){
+        // First login — force a password change before entering.
+        pendingAcct=acct; pendingTemp=p;
+        loginErr.textContent='';
+        loginView.style.display='none';
+        newpwView.style.display='block';
+        newpw1.focus();
+      }else{
+        grantAccess(acct);
+      }
+    }catch(err){
+      flashLoginErr(err.status===404?'Login service missing — run SQL setup.':'Could not reach the server.');
+    }finally{
+      loginBtn.disabled=false; loginBtn.textContent=orig;
     }
   }
-  pwBtn.addEventListener('click',checkPassword);
-  pwInp.addEventListener('keydown',e=>{if(e.key==='Enter')checkPassword();});
+
+  /* First-login: set a new password via the admin_set_password RPC. */
+  async function doSetPassword(){
+    const a=newpw1.value,b=newpw2.value;
+    newpwErr.textContent='';
+    if(a.length<8){ newpwErr.textContent='Use at least 8 characters.'; newpw1.focus(); return; }
+    if(a!==b){ newpwErr.textContent='Passwords do not match.'; newpw2.classList.add('err'); setTimeout(()=>newpw2.classList.remove('err'),1800); return; }
+    if(a===pendingTemp){ newpwErr.textContent='Choose a different password.'; return; }
+    newpwBtn.disabled=true; const orig=newpwBtn.textContent; newpwBtn.textContent='Saving…';
+    try{
+      const ok=await rpc('admin_set_password',{p_username:pendingAcct.username||loginUser.value.trim(),p_old_password:pendingTemp,p_new_password:a});
+      if(ok===true){ grantAccess(pendingAcct); }
+      else{ newpwErr.textContent='Could not update. Sign in again.'; }
+    }catch(err){
+      newpwErr.textContent='Could not reach the server.';
+    }finally{
+      newpwBtn.disabled=false; newpwBtn.textContent=orig;
+    }
+  }
+
+  loginBtn.addEventListener('click',doLogin);
+  loginUser.addEventListener('keydown',e=>{if(e.key==='Enter')loginPass.focus();});
+  loginPass.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+  newpwBtn.addEventListener('click',doSetPassword);
+  newpw1.addEventListener('keydown',e=>{if(e.key==='Enter')newpw2.focus();});
+  newpw2.addEventListener('keydown',e=>{if(e.key==='Enter')doSetPassword();});
 
   document.getElementById('logout-btn').addEventListener('click',()=>{
     clearCookie('hv_auth');
+    clearCookie('hv_admin');
+    clearCookie('hv_tok');
+    clearCookie('hv_role');
     location.reload();
   });
 
@@ -577,9 +756,160 @@ body{
   function csvCell(v){v=String(v);return /[",\r\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
   function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
+  /* ══ VIEW SWITCH + ADMIN USERS MANAGEMENT ══ */
+  const viewNav=document.getElementById('view-nav');
+  const registryView=document.getElementById('registry-view');
+  const adminsView=document.getElementById('admins-view');
+  const admBody=document.getElementById('adm-body');
+  const admFlash=document.getElementById('adm-flash');
+
+  // Only admins see the switcher and the Admin Users view at all.
+  function setupViews(){
+    if(IS_ADMIN){
+      viewNav.style.display='inline-flex';
+    }else{
+      viewNav.style.display='none';
+      adminsView.style.display='none';
+      registryView.style.display='block';
+    }
+  }
+
+  viewNav.addEventListener('click',e=>{
+    const b=e.target.closest('button[data-view]'); if(!b) return;
+    viewNav.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));
+    const v=b.dataset.view;
+    registryView.style.display = v==='registry' ? 'block' : 'none';
+    adminsView.style.display   = v==='admins'   ? 'block' : 'none';
+    if(v==='admins') loadAdmins();
+  });
+
+  // Wrap RPCs with the session token; bounce to login if the session is gone/denied.
+  async function adminRpc(fn,params){
+    try{
+      return await rpc(fn,Object.assign({p_token:SESSION},params||{}));
+    }catch(err){
+      if(err.status===401||err.status===403){
+        clearCookie('hv_auth');clearCookie('hv_admin');clearCookie('hv_tok');clearCookie('hv_role');
+        location.reload();
+      }
+      throw err;
+    }
+  }
+
+  // Edge Function: generates + emails the temp password server-side.
+  // The plaintext password is never returned to the browser.
+  const FN_URL = SB_URL + '/functions/v1/admin-users';
+  async function callFn(payload){
+    const res=await fetch(FN_URL,{
+      method:'POST',
+      headers:{'Content-Type':'application/json',apikey:SB_KEY,Authorization:'Bearer '+SB_KEY},
+      body:JSON.stringify(Object.assign({token:SESSION},payload))
+    });
+    let data={}; try{ data=await res.json(); }catch(_){}
+    if(!res.ok){
+      const e=new Error(data.error||('HTTP '+res.status));
+      e.code = data.error==='duplicate' ? 'duplicate'
+             : (data.error==='not authorized'||res.status===401||res.status===403) ? 'not_authorized'
+             : 'error';
+      if(e.code==='not_authorized'){
+        clearCookie('hv_auth');clearCookie('hv_admin');clearCookie('hv_tok');clearCookie('hv_role');
+        setTimeout(()=>location.reload(),1500);
+      }
+      throw e;
+    }
+    return data;
+  }
+
+  async function loadAdmins(){
+    admFlash.textContent='';
+    admBody.innerHTML='<div class="state"><span class="spin"></span>Loading admin users…</div>';
+    try{
+      const list=await adminRpc('admin_list_users');
+      renderAdmins(Array.isArray(list)?list:[]);
+    }catch(_){
+      admBody.innerHTML='<div class="state err">Could not load admin users.</div>';
+    }
+  }
+
+  function renderAdmins(list){
+    if(!list.length){ admBody.innerHTML='<div class="state">No admin users.</div>'; return; }
+    admBody.innerHTML=list.map(u=>{
+      const name=escapeHtml(((u.first_name||'')+' '+(u.last_name||'')).trim()||'—');
+      const role=u.admin?'<span class="badge admin">Admin</span>':'<span class="badge">Staff</span>';
+      const status=u.active?'<span class="badge on">Active</span>':'<span class="badge off">Inactive</span>';
+      return '<div class="adm-row">'+
+        '<div class="c" data-label="Name">'+name+'</div>'+
+        '<div class="c" data-label="Username">'+escapeHtml(u.username||'—')+'</div>'+
+        '<div class="c rc-email" data-label="Email">'+escapeHtml(u.email||'—')+'</div>'+
+        '<div class="c" data-label="Role">'+role+'</div>'+
+        '<div class="c" data-label="Status">'+status+'</div>'+
+        '<div class="c row-actions" data-label="Actions">'+
+          '<button class="mini-btn" data-act="reset" data-guid="'+u.guid+'" data-user="'+escapeHtml(u.username||'')+'">Reset PW</button>'+
+          '<button class="mini-btn" data-act="toggle" data-guid="'+u.guid+'" data-active="'+(u.active?'1':'0')+'">'+(u.active?'Deactivate':'Activate')+'</button>'+
+        '</div>'+
+      '</div>';
+    }).join('');
+  }
+
+  admBody.addEventListener('click',async e=>{
+    const b=e.target.closest('button[data-act]'); if(!b) return;
+    const guid=b.dataset.guid;
+    b.disabled=true;
+    try{
+      if(b.dataset.act==='reset'){
+        const res=await callFn({action:'reset',guid:guid});
+        admFlash.textContent='A temporary password has been emailed to '
+          +(res.email||(b.dataset.user||'the user'))
+          +'. They must set a new one at next login.';
+      }else{
+        const makeActive=b.dataset.active!=='1';
+        await adminRpc('admin_set_active',{p_guid:guid,p_active:makeActive});
+        admFlash.textContent='';
+        loadAdmins();
+        return;
+      }
+    }catch(err){
+      admFlash.textContent=/yourself/i.test(err.message||'')
+        ? 'You cannot deactivate your own account.'
+        : 'Action failed. Please try again.';
+    }
+    b.disabled=false;
+  });
+
+  document.getElementById('na-btn').addEventListener('click',async ()=>{
+    const first=document.getElementById('na-first').value.trim();
+    const last =document.getElementById('na-last').value.trim();
+    const email=document.getElementById('na-email').value.trim();
+    const user =document.getElementById('na-user').value.trim();
+    const isAdm=document.getElementById('na-admin').checked;
+    const msg  =document.getElementById('na-msg');
+    msg.style.color='var(--dk-red)';
+    if(!first||!last||!user){ msg.textContent='First name, last name and username are required.'; return; }
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ msg.textContent='Enter a valid email address.'; return; }
+    const btn=document.getElementById('na-btn'); btn.disabled=true; const o=btn.textContent; btn.textContent='Creating…';
+    try{
+      await callFn({action:'create',first:first,last:last,email:email,username:user,is_admin:isAdm});
+      msg.style.color='var(--dk-txt)';
+      msg.textContent='User created — a temporary password has been emailed to '+email
+        +'. They must change it at first login.';
+      ['na-first','na-last','na-email','na-user'].forEach(id=>document.getElementById(id).value='');
+      document.getElementById('na-admin').checked=false;
+      loadAdmins();
+    }catch(err){
+      msg.style.color='var(--dk-red)';
+      msg.textContent = err.code==='duplicate'
+        ? 'That username or email already exists.'
+        : err.code==='not_authorized'
+          ? 'Your session expired — please sign in again.'
+          : 'Could not create the user. Please try again.';
+    }finally{ btn.disabled=false; btn.textContent=o; }
+  });
+
   /* ══ BOOT ══ */
+  SESSION=getCookie('hv_tok');
+  IS_ADMIN=getCookie('hv_role')==='1';
   if(getCookie('hv_auth')==='granted') enter();
-  else pwInp.focus();
+  else loginUser.focus();
 })();
 </script>
 </body>
