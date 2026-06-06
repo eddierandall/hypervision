@@ -1,10 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- Modern PNG Favicon from your images folder -->
-<link rel="icon" type="image/png" href="/images/favicon.png">
-<!-- Apple Touch Icon (uses the same high-res PNG) -->
-<link rel="apple-touch-icon" href="/images/favicon.png">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#07090f">
@@ -271,6 +267,53 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
   }
   const countryPromise = getCountry();
 
+  /* ══ TRAFFIC SOURCE (where the visitor came from) ═════════════
+     Two layers, because the big social apps send a blank referrer:
+       1) User-Agent token  → catches in-app browsers (IG, TikTok…)
+       2) Referrer hostname → catches search + real browser tabs
+     Falls back to 'direct' (typed/bookmarked or privacy-stripped)
+     or 'other' (unrecognised referrer). The raw referrer is stored
+     too, so the long tail can be reviewed and rules refined later.
+     Note: links shared in WhatsApp/Telegram/iMessage/email can't be
+     attributed and will read as 'direct'. UA tokens drift over time
+     and may need an occasional update. */
+  function detectSource(){
+    const ua = (navigator.userAgent || '').toLowerCase();
+    // 1) In-app browser, identified by the app's UA token.
+    if(/instagram/.test(ua))                       return 'instagram';
+    if(/musical_ly|bytedance|tiktok|trill/.test(ua)) return 'tiktok';
+    if(/fban|fbav|fb_iab|fbios/.test(ua))          return 'facebook';
+    if(/\btwitter\b/.test(ua))                     return 'x';
+    if(/snapchat/.test(ua))                        return 'snapchat';
+    if(/pinterest/.test(ua))                       return 'pinterest';
+    if(/linkedinapp/.test(ua))                     return 'linkedin';
+    // 2) Referring host (real browser tabs, search engines, desktop).
+    let host='';
+    try{ host = REFERRER ? new URL(REFERRER).hostname.toLowerCase() : ''; }catch{}
+    if(host){
+      const map=[
+        [/(^|\.)instagram\.com$/,                'instagram'],
+        [/(^|\.)tiktok\.com$/,                   'tiktok'],
+        [/(^|\.)(twitter|x)\.com$|(^|\.)t\.co$/, 'x'],
+        [/(^|\.)facebook\.com$|(^|\.)fb\.com$/,  'facebook'],
+        [/(^|\.)google\./,                       'google'],
+        [/(^|\.)youtube\.com$|(^|\.)youtu\.be$/, 'youtube'],
+        [/(^|\.)reddit\.com$/,                   'reddit'],
+        [/(^|\.)bing\.com$/,                     'bing'],
+        [/(^|\.)duckduckgo\.com$/,               'duckduckgo'],
+        [/(^|\.)pinterest\./,                    'pinterest'],
+        [/(^|\.)linkedin\.com$|(^|\.)lnkd\.in$/, 'linkedin'],
+        [/(^|\.)snapchat\.com$/,                 'snapchat']
+      ];
+      for(const [re,name] of map){ if(re.test(host)) return name; }
+      return 'other';
+    }
+    // 3) Nothing to go on.
+    return 'direct';
+  }
+  const REFERRER = document.referrer || null;
+  const SOURCE   = detectSource();
+
   /* ══ COUNTDOWN (disabled — may revisit) ══════════════════════
   // const countdownEl = document.getElementById('countdown');
   // function updateCountdown(){
@@ -364,7 +407,9 @@ body{min-height:100vh;min-height:100dvh;font-family:'Rajdhani',sans-serif;overfl
         first_name:document.getElementById('fname').value.trim(),
         last_name :document.getElementById('lname').value.trim(),
         email     :document.getElementById('email').value.trim().toLowerCase(),
-        country   :await countryPromise
+        country   :await countryPromise,
+        source    :SOURCE,
+        referrer  :REFERRER
       });
       pDark.classList.add('hidden');
       pTY.classList.remove('hidden');
