@@ -99,7 +99,7 @@ body{
 .stat-date{font-family:'Share Tech Mono',monospace;font-size:.62rem;letter-spacing:.12em;color:rgba(200,225,255,.42);text-transform:uppercase;margin-top:5px}
 .stat-date:empty{margin-top:0}
 .stat-num{font-family:'Orbitron',sans-serif;font-size:clamp(1.5rem,5vw,2.2rem);font-weight:900;line-height:1;text-shadow:var(--dk-glow-sm)}
-.stat-label{font-family:'Share Tech Mono',monospace;font-size:.66rem;letter-spacing:.18em;color:var(--dk-txt-dim);text-transform:uppercase;margin-top:8px}
+.stat-label{font-family:'Share Tech Mono',monospace;font-size:.82rem;letter-spacing:.14em;color:var(--dk-txt-dim);text-transform:uppercase;text-align:center;margin:0 0 9px}
 .stat-sub{font-family:'Share Tech Mono',monospace;font-size:.72rem;letter-spacing:.06em;color:var(--dk-txt-dim);margin-top:9px}
 .stat-sub b{color:var(--dk-txt);font-weight:700}
 .stat-delta-pct{font-family:'Share Tech Mono',monospace;font-size:.74rem;letter-spacing:.06em;margin-top:7px;color:var(--dk-txt-dim)}
@@ -108,7 +108,6 @@ body{
 .stat-num.down,.stat-delta-pct.down{color:var(--dk-red);text-shadow:none}
 /* Week-by-day tile */
 .stat-week{text-align:left;justify-content:flex-start;padding:14px 16px}
-.stat-week .stat-label{margin-top:0;margin-bottom:10px}
 .wk-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:11px}
 .wk-arrow{all:unset;cursor:pointer;font-size:.82rem;line-height:1;color:var(--dk-txt-dim);padding:5px 8px;border:1px solid var(--dk-border);border-radius:8px;transition:color .15s,border-color .15s}
 .wk-arrow:hover{color:var(--dk-txt);border-color:var(--dk-border-hi)}
@@ -290,13 +289,13 @@ body{
 
   <section class="stats">
     <div class="stat">
-      <div class="stat-num" id="stat-total">—</div>
       <div class="stat-label">Total Registered</div>
+      <div class="stat-num" id="stat-total">—</div>
     </div>
     <div class="stat">
+      <div class="stat-label">New Today</div>
       <div class="stat-num" id="stat-today">—</div>
       <div class="stat-delta-pct" id="stat-delta-pct"></div>
-      <div class="stat-label">New Today</div>
     </div>
     <div class="stat stat-week">
       <div class="stat-label">Registrations by Day</div>
