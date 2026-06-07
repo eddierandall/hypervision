@@ -1,10 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- Modern PNG Favicon from your images folder -->
-<link rel="icon" type="image/png" href="/images/favicon.png">
-<!-- Apple Touch Icon (uses the same high-res PNG) -->
-<link rel="apple-touch-icon" href="/images/favicon.png">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#07090f">
@@ -98,16 +94,32 @@ body{
 .brand-sub{font-family:'Share Tech Mono',monospace;font-size:.66rem;letter-spacing:.26em;color:var(--dk-txt-dim);text-transform:uppercase;margin-top:4px}
 
 /* Stat strip */
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:clamp(16px,3vw,24px)}
-.stat{background:rgba(255,255,255,.028);border:1px solid var(--dk-border);border-radius:16px;padding:16px 18px;backdrop-filter:blur(10px);text-align:center}
+.stats{display:grid;grid-template-columns:1fr 1fr 1.6fr;gap:12px;align-items:stretch;margin-bottom:clamp(16px,3vw,24px)}
+.stat{background:rgba(255,255,255,.028);border:1px solid var(--dk-border);border-radius:16px;padding:16px 18px;backdrop-filter:blur(10px);text-align:center;display:flex;flex-direction:column;justify-content:center}
 .stat-date{font-family:'Share Tech Mono',monospace;font-size:.62rem;letter-spacing:.12em;color:rgba(200,225,255,.42);text-transform:uppercase;margin-top:5px}
 .stat-date:empty{margin-top:0}
 .stat-num{font-family:'Orbitron',sans-serif;font-size:clamp(1.5rem,5vw,2.2rem);font-weight:900;line-height:1;text-shadow:var(--dk-glow-sm)}
 .stat-label{font-family:'Share Tech Mono',monospace;font-size:.66rem;letter-spacing:.18em;color:var(--dk-txt-dim);text-transform:uppercase;margin-top:8px}
+.stat-sub{font-family:'Share Tech Mono',monospace;font-size:.72rem;letter-spacing:.06em;color:var(--dk-txt-dim);margin-top:9px}
+.stat-sub b{color:var(--dk-txt);font-weight:700}
 .stat-delta-pct{font-family:'Share Tech Mono',monospace;font-size:.74rem;letter-spacing:.06em;margin-top:7px;color:var(--dk-txt-dim)}
 .stat-delta-pct:empty{margin-top:0}
 .stat-num.up,.stat-delta-pct.up{color:#7ce6aa;text-shadow:0 0 8px rgba(124,230,170,.4)}
 .stat-num.down,.stat-delta-pct.down{color:var(--dk-red);text-shadow:none}
+/* Week-by-day tile */
+.stat-week{text-align:left;justify-content:flex-start;padding:14px 16px}
+.wk-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:11px}
+.wk-arrow{all:unset;cursor:pointer;font-size:.82rem;line-height:1;color:var(--dk-txt-dim);padding:5px 8px;border:1px solid var(--dk-border);border-radius:8px;transition:color .15s,border-color .15s}
+.wk-arrow:hover{color:var(--dk-txt);border-color:var(--dk-border-hi)}
+.wk-arrow:disabled{opacity:.3;cursor:default}
+.wk-range{font-family:'Share Tech Mono',monospace;font-size:.66rem;letter-spacing:.1em;color:rgba(200,225,255,.6);text-transform:uppercase;text-align:center;flex:1}
+.wk-list{display:flex;flex-direction:column;gap:5px}
+.wk-row{display:flex;align-items:baseline;justify-content:space-between;gap:12px;font-family:'Share Tech Mono',monospace;font-size:.8rem;padding:2px 0;border-bottom:1px solid rgba(180,210,255,.06)}
+.wk-row:last-child{border-bottom:none}
+.wk-day{color:var(--dk-txt-dim);letter-spacing:.04em}
+.wk-cnt{font-weight:700;color:var(--dk-txt)}
+.wk-row.is-today .wk-day,.wk-row.is-today .wk-cnt{color:#8ec8f8}
+@media(max-width:720px){.stats{grid-template-columns:1fr}}
 
 /* Toolbar */
 .toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
@@ -277,17 +289,24 @@ body{
   <div id="registry-view">
 
   <section class="stats">
-    <div class="stat"><div class="stat-num" id="stat-total">—</div><div class="stat-label">Total Registered</div></div>
     <div class="stat">
-      <div class="stat-num" id="stat-today">—</div>
-      <div class="stat-label">New Today</div>
-      <div class="stat-date" id="stat-today-date"></div>
+      <div class="stat-num" id="stat-total">—</div>
+      <div class="stat-label">Total Registered</div>
+      <div class="stat-sub"><b id="stat-today">—</b> new today</div>
     </div>
     <div class="stat">
       <div class="stat-num" id="stat-delta">—</div>
       <div class="stat-delta-pct" id="stat-delta-pct"></div>
       <div class="stat-label">vs Yesterday</div>
-      <div class="stat-date" id="stat-yest-date"></div>
+    </div>
+    <div class="stat stat-week">
+      <div class="wk-head">
+        <button class="wk-arrow" id="wk-prev" type="button" aria-label="Previous week">◀</button>
+        <span class="wk-range" id="wk-range">—</span>
+        <button class="wk-arrow" id="wk-next" type="button" aria-label="Next week">▶</button>
+      </div>
+      <div class="wk-list" id="wk-list"></div>
+      <div class="stat-label">Registrations by Day</div>
     </div>
   </section>
 
@@ -418,8 +437,11 @@ body{
   const stToday=document.getElementById('stat-today');
   const stDelta=document.getElementById('stat-delta');
   const stDeltaPct=document.getElementById('stat-delta-pct');
-  const stTodayDate=document.getElementById('stat-today-date');
-  const stYestDate=document.getElementById('stat-yest-date');
+  const wkPrev=document.getElementById('wk-prev');
+  const wkNext=document.getElementById('wk-next');
+  const wkRange=document.getElementById('wk-range');
+  const wkList=document.getElementById('wk-list');
+  let weekOffset=0;        // 0 = current 7-day window ending today; +1 = previous week
   const pager=document.getElementById('pager');
   const pgInfo=document.getElementById('pg-info');
   const prevBtn=document.getElementById('prev-btn');
@@ -567,6 +589,7 @@ body{
       body.innerHTML='<div class="state err">'+escapeHtml(msg)+'</div>';
       stTotal.textContent=stToday.textContent='—';
       stDelta.textContent='—';stDelta.className='stat-num';stDeltaPct.textContent='';
+      wkRange.textContent='—';wkList.innerHTML='';wkPrev.disabled=wkNext.disabled=true;
       foot.textContent='';
     }
   }
@@ -636,6 +659,48 @@ body{
       ' · '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
   }
 
+  function dayStart(ms){ const d=new Date(ms); d.setHours(0,0,0,0); return d.getTime(); }
+
+  // Last 7 days (by day) for the selected week, with prev/next paging.
+  function renderWeek(){
+    if(!dateKey){
+      wkRange.textContent='—';
+      wkList.innerHTML='<div class="wk-row"><span class="wk-day">No date data</span></div>';
+      wkPrev.disabled=wkNext.disabled=true;
+      return;
+    }
+    const todayStart=dayStart(Date.now());
+    const counts=new Map();
+    let earliest=todayStart;
+    for(const r of records){
+      const ts=tsOf(r); if(!ts) continue;
+      const d=dayStart(ts);
+      counts.set(d,(counts.get(d)||0)+1);
+      if(d<earliest) earliest=d;
+    }
+    const maxOffset=Math.max(0,Math.floor((todayStart-earliest)/(7*864e5)));
+    if(weekOffset<0) weekOffset=0;
+    if(weekOffset>maxOffset) weekOffset=maxOffset;
+
+    const windowEnd=todayStart - weekOffset*7*864e5;   // newest day shown
+    const days=[];
+    for(let i=0;i<7;i++) days.push(windowEnd - i*864e5); // newest → oldest
+    const fmtDay=d=>new Date(d).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'});
+    const fmtR  =d=>new Date(d).toLocaleDateString(undefined,{month:'short',day:'numeric'});
+
+    wkRange.textContent=fmtR(days[6])+' – '+fmtR(days[0]);
+    wkList.innerHTML=days.map(d=>{
+      const isToday=d===todayStart;
+      return '<div class="wk-row'+(isToday?' is-today':'')+'">'
+        +'<span class="wk-day">'+fmtDay(d)+'</span>'
+        +'<span class="wk-cnt">'+(counts.get(d)||0)+'</span></div>';
+    }).join('');
+    wkNext.disabled = weekOffset<=0;         // can't page into the future
+    wkPrev.disabled = weekOffset>=maxOffset; // no older data
+  }
+  wkPrev.addEventListener('click',()=>{ weekOffset++; renderWeek(); });
+  wkNext.addEventListener('click',()=>{ weekOffset--; renderWeek(); });
+
   function render(){
     const rows=visibleRows();
     // stats
@@ -643,9 +708,6 @@ body{
     const startToday=new Date();startToday.setHours(0,0,0,0);
     const tT=startToday.getTime();
     const tY=tT-864e5; // start of yesterday (local)
-    const fmtShort=d=>d.toLocaleDateString(undefined,{month:'short',day:'numeric'});
-    stTodayDate.textContent=fmtShort(startToday);
-    stYestDate.textContent=fmtShort(new Date(tY));
     if(dateKey){
       let today=0,yest=0;
       for(const r of records){
@@ -672,6 +734,7 @@ body{
       stDelta.textContent='—';stDelta.className='stat-num';
       stDeltaPct.textContent='';stDeltaPct.className='stat-delta-pct';
     }
+    renderWeek();
     // header arrows
     document.querySelectorAll('#reg-head button').forEach(b=>{
       const on=b.dataset.sort===sortKey;
