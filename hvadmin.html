@@ -108,15 +108,15 @@ body{
 .stat-num.down,.stat-delta-pct.down{color:var(--dk-red);text-shadow:none}
 /* Week-by-day tile */
 .stat-week{text-align:left;justify-content:flex-start;padding:14px 16px}
-.wk-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:11px}
+.stat-week .stat-label{margin-top:0;margin-bottom:10px}
+.wk-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:11px}
 .wk-arrow{all:unset;cursor:pointer;font-size:.82rem;line-height:1;color:var(--dk-txt-dim);padding:5px 8px;border:1px solid var(--dk-border);border-radius:8px;transition:color .15s,border-color .15s}
 .wk-arrow:hover{color:var(--dk-txt);border-color:var(--dk-border-hi)}
 .wk-arrow:disabled{opacity:.3;cursor:default}
 .wk-range{font-family:'Share Tech Mono',monospace;font-size:.66rem;letter-spacing:.1em;color:rgba(200,225,255,.6);text-transform:uppercase;text-align:center;flex:1}
-.wk-list{display:flex;flex-direction:column;gap:5px}
-.wk-row{display:flex;align-items:baseline;justify-content:space-between;gap:12px;font-family:'Share Tech Mono',monospace;font-size:.8rem;padding:2px 0;border-bottom:1px solid rgba(180,210,255,.06)}
-.wk-row:last-child{border-bottom:none}
-.wk-day{color:var(--dk-txt-dim);letter-spacing:.04em}
+.wk-list{display:grid;grid-template-columns:1fr 1fr;column-gap:16px;row-gap:3px}
+.wk-row{display:flex;align-items:baseline;justify-content:space-between;gap:10px;font-family:'Share Tech Mono',monospace;font-size:.76rem;padding:2px 0;border-bottom:1px solid rgba(180,210,255,.06)}
+.wk-day{color:var(--dk-txt-dim);letter-spacing:.03em;white-space:nowrap}
 .wk-cnt{font-weight:700;color:var(--dk-txt)}
 .wk-row.is-today .wk-day,.wk-row.is-today .wk-cnt{color:#8ec8f8}
 @media(max-width:720px){.stats{grid-template-columns:1fr}}
@@ -292,21 +292,20 @@ body{
     <div class="stat">
       <div class="stat-num" id="stat-total">—</div>
       <div class="stat-label">Total Registered</div>
-      <div class="stat-sub"><b id="stat-today">—</b> new today</div>
     </div>
     <div class="stat">
-      <div class="stat-num" id="stat-delta">—</div>
+      <div class="stat-num" id="stat-today">—</div>
       <div class="stat-delta-pct" id="stat-delta-pct"></div>
-      <div class="stat-label">vs Yesterday</div>
+      <div class="stat-label">New Today</div>
     </div>
     <div class="stat stat-week">
+      <div class="stat-label">Registrations by Day</div>
+      <div class="wk-list" id="wk-list"></div>
       <div class="wk-head">
         <button class="wk-arrow" id="wk-prev" type="button" aria-label="Previous week">◀</button>
         <span class="wk-range" id="wk-range">—</span>
         <button class="wk-arrow" id="wk-next" type="button" aria-label="Next week">▶</button>
       </div>
-      <div class="wk-list" id="wk-list"></div>
-      <div class="stat-label">Registrations by Day</div>
     </div>
   </section>
 
@@ -435,7 +434,6 @@ body{
   const notice=document.getElementById('notice');
   const stTotal=document.getElementById('stat-total');
   const stToday=document.getElementById('stat-today');
-  const stDelta=document.getElementById('stat-delta');
   const stDeltaPct=document.getElementById('stat-delta-pct');
   const wkPrev=document.getElementById('wk-prev');
   const wkNext=document.getElementById('wk-next');
@@ -587,8 +585,8 @@ body{
         ? 'Read access denied (401/403). The table needs a SELECT policy for the anon role.'
         : 'Could not reach the registry. '+(err.message||'');
       body.innerHTML='<div class="state err">'+escapeHtml(msg)+'</div>';
-      stTotal.textContent=stToday.textContent='—';
-      stDelta.textContent='—';stDelta.className='stat-num';stDeltaPct.textContent='';
+      stTotal.textContent=stToday.textContent='—';stToday.className='stat-num';
+      stDeltaPct.textContent='';stDeltaPct.className='stat-delta-pct';
       wkRange.textContent='—';wkList.innerHTML='';wkPrev.disabled=wkNext.disabled=true;
       foot.textContent='';
     }
@@ -717,21 +715,19 @@ body{
         else if(ts>=tY) yest++;
       }
       stToday.textContent=today;
-      // day-over-day change
       const diff=today-yest;
-      stDelta.textContent=(diff>0?'+':'')+diff;
-      stDelta.className='stat-num '+(diff>0?'up':diff<0?'down':'');
+      stToday.className='stat-num '+(diff>0?'up':diff<0?'down':'');
       if(yest===0){
-        stDeltaPct.textContent=today>0?'▲ new':'—';
+        stDeltaPct.textContent=today>0?'▲ new vs yesterday':'— vs yesterday';
         stDeltaPct.className='stat-delta-pct '+(today>0?'up':'');
       }else{
         const pct=Math.round((diff/yest)*100);
-        stDeltaPct.textContent=(diff>0?'▲ ':diff<0?'▼ ':'■ ')+Math.abs(pct)+'%';
+        const sign=diff>0?'▲ ':diff<0?'▼ ':'■ ';
+        stDeltaPct.textContent=sign+(diff>0?'+':'')+diff+' ('+Math.abs(pct)+'%) vs yesterday';
         stDeltaPct.className='stat-delta-pct '+(diff>0?'up':diff<0?'down':'');
       }
     }else{
-      stToday.textContent='—';
-      stDelta.textContent='—';stDelta.className='stat-num';
+      stToday.textContent='—';stToday.className='stat-num';
       stDeltaPct.textContent='';stDeltaPct.className='stat-delta-pct';
     }
     renderWeek();
