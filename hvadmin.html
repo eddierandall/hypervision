@@ -127,7 +127,7 @@ body{
 
 /* Registry table */
 .panel{background:rgba(255,255,255,.022);border:1px solid var(--dk-border);border-radius:18px;backdrop-filter:blur(12px);box-shadow:0 0 40px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.05);overflow:hidden}
-.reg-head,.reg-row{display:grid;grid-template-columns:1.2fr 1.6fr .8fr 1fr;gap:14px;align-items:center;padding:14px clamp(14px,3vw,22px)}
+.reg-head,.reg-row{display:grid;grid-template-columns:1.2fr 1.6fr .8fr .8fr 1fr;gap:14px;align-items:center;padding:14px clamp(14px,3vw,22px)}
 .reg-head{border-bottom:1px solid var(--dk-border);background:rgba(120,185,255,.04)}
 .reg-head button{all:unset;cursor:pointer;font-family:'Share Tech Mono',monospace;font-size:.68rem;letter-spacing:.16em;color:var(--dk-txt-dim);text-transform:uppercase;display:inline-flex;align-items:center;gap:6px}
 .reg-head button:hover{color:var(--dk-txt)}
@@ -141,6 +141,7 @@ body{
 .rc-name{font-weight:600;letter-spacing:.02em}
 .rc-email{font-family:'Share Tech Mono',monospace;font-size:.85rem;color:rgba(190,220,255,.8)}
 .rc-country{letter-spacing:.03em}
+.rc-source{font-family:'Share Tech Mono',monospace;font-size:.82rem;color:rgba(190,220,255,.72);letter-spacing:.02em;text-transform:capitalize}
 .rc-date{font-family:'Share Tech Mono',monospace;font-size:.78rem;color:var(--dk-txt-dim);text-align:right}
 
 /* States */
@@ -314,7 +315,7 @@ body{
       <button class="seg-btn" data-filter="sub" type="button">Subscribed</button>
       <button class="seg-btn" data-filter="unsub" type="button">Unsubscribed</button>
     </div>
-    <div class="search"><input class="dk-input" type="search" id="search" placeholder="Search name, email or country…" autocomplete="off"></div>
+    <div class="search"><input class="dk-input" type="search" id="search" placeholder="Search name, email, country or source…" autocomplete="off"></div>
     <label class="rows-per" for="page-size">Rows
       <select class="dk-select" id="page-size">
         <option value="25">25</option>
@@ -339,6 +340,7 @@ body{
       <button data-sort="name">Patient <span class="arrow"></span></button>
       <button data-sort="email">Email <span class="arrow"></span></button>
       <button data-sort="country">Country <span class="arrow"></span></button>
+      <button data-sort="source">Source <span class="arrow"></span></button>
       <button data-sort="date" class="active" style="justify-content:flex-end">Date Registered <span class="arrow">▼</span></button>
     </div>
     <div id="reg-body">
@@ -451,7 +453,7 @@ body{
   /* ══ STATE ══ */
   let records=[];          // raw rows from Supabase
   let dateKey=null;        // detected timestamp column
-  let sortKey='date';      // 'name' | 'email' | 'date'
+  let sortKey='date';      // 'name' | 'email' | 'country' | 'source' | 'date'
   let sortDir=-1;          // 1 asc, -1 desc
   let pageSize=25;         // rows per page (25 | 50 | 100)
   let page=1;              // current page (1-based)
@@ -634,7 +636,7 @@ body{
         if(fromTs!=null && ts<fromTs) return false;
         if(toTs!=null && ts>toTs) return false;
       }
-      if(q && !(fullName(r)+' '+(r.email||'')+' '+(r.country||'')).toLowerCase().includes(q)) return false;
+      if(q && !(fullName(r)+' '+(r.email||'')+' '+(r.country||'')+' '+(r.source||'')).toLowerCase().includes(q)) return false;
       return true;
     });
     rows.sort((a,b)=>{
@@ -642,6 +644,7 @@ body{
       if(sortKey==='name'){av=fullName(a).toLowerCase();bv=fullName(b).toLowerCase();}
       else if(sortKey==='email'){av=(a.email||'').toLowerCase();bv=(b.email||'').toLowerCase();}
       else if(sortKey==='country'){av=(a.country||'').toLowerCase();bv=(b.country||'').toLowerCase();}
+      else if(sortKey==='source'){av=(a.source||'').toLowerCase();bv=(b.source||'').toLowerCase();}
       else{av=tsOf(a);bv=tsOf(b);}
       return av<bv?-1*sortDir:av>bv?1*sortDir:0;
     });
@@ -752,6 +755,7 @@ body{
           '<div class="rc rc-name" data-label="Patient">'+escapeHtml(fullName(r))+'</div>'+
           '<div class="rc rc-email" data-label="Email">'+escapeHtml(r.email||'—')+'</div>'+
           '<div class="rc rc-country" data-label="Country">'+escapeHtml(r.country||'—')+'</div>'+
+          '<div class="rc rc-source" data-label="Source">'+escapeHtml(r.source||'—')+'</div>'+
           '<div class="rc rc-date" data-label="Date Registered">'+escapeHtml(fmtDate(r))+'</div>'+
         '</div>'
       ).join('');
@@ -800,9 +804,9 @@ body{
   document.getElementById('export-btn').addEventListener('click',()=>{
     const rows=records.filter(r=>!isUnsub(r)); // all subscribed records
     if(!rows.length) return;
-    const head=['First Name','Last Name','Email','Country','Registered'];
+    const head=['First Name','Last Name','Email','Country','Source','Registered'];
     const body=rows.map(r=>[
-      r.first_name||'', r.last_name||'', r.email||'', r.country||'',
+      r.first_name||'', r.last_name||'', r.email||'', r.country||'', r.source||'',
       dateKey&&r[dateKey]?new Date(r[dateKey]).toISOString():''
     ]);
     const csv=[head,...body].map(row=>row.map(csvCell).join(',')).join('\r\n');
